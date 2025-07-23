@@ -20,8 +20,7 @@ public class EyeTracker : MonoBehaviour
     private string exportFileName = "eye-tracking";
 
     private string _eyeTrackingFilePath;
-    private float _lastFlushedTime;
-    private readonly List<EyeTrackingDatum> _eyeTrackingDataBuffer = new();
+    private CsvExporter _eyeTrackingExporter;
 
     //METHODS
     private static GameObject GetGazingObject(RaycastHit hit)
@@ -36,43 +35,13 @@ public class EyeTracker : MonoBehaviour
         return currentObject.gameObject;
     }
 
-    private void ExportRecentData()
-    {
-        if (_eyeTrackingDataBuffer.Count == 0) return;
-
-        if (Time.time - _lastFlushedTime >= exportInterval)
-        {
-            FlushEyeTrackingData();
-        }
-    }
-
-    private void FlushEyeTrackingData()
-    {
-        var isFileExisting = File.Exists(_eyeTrackingFilePath);
-
-        using var writer = new StreamWriter(_eyeTrackingFilePath, true);
-
-        if (!isFileExisting)
-        {
-            writer.WriteLine("Time(s),GazingObject,GazingTimer(s)");
-        }
-        else
-        {
-            foreach (var datum in _eyeTrackingDataBuffer)
-            {
-                writer.WriteLine($"{datum.TimeStamp},{datum.GazingObject},{datum.GazingTimer}");
-            }
-
-            writer.Flush();
-            _eyeTrackingDataBuffer.Clear();
-            _lastFlushedTime = Time.time;
-        }
-    }
-
     private void Awake()
     {
-        var timeStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        _eyeTrackingFilePath = Application.persistentDataPath + $"/{exportFileName}_{timeStamp}.csv";
+        var          timeStamp           = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        var          eyeTrackingFilePath = Application.persistentDataPath + $"/{exportFileName}_{timeStamp}.csv";
+        const string csvHeader           = "Time (s),GazingObject,GazingTimer (s)";
+
+        _eyeTrackingExporter = new CsvExporter(eyeTrackingFilePath, exportInterval, csvHeader);
 
         Debug.Log($"Exporting velocity data to {_eyeTrackingFilePath}");
     }
@@ -85,7 +54,7 @@ public class EyeTracker : MonoBehaviour
     private void Update()
     {
         UpdateGazeTracking();
-        ExportRecentData();
+        _eyeTrackingExporter.ExportRecentData();
     }
 
     private void UpdateGazeTracking()
@@ -123,12 +92,12 @@ public class EyeTracker : MonoBehaviour
         else
         {
             // Gazing at a different object
-            _eyeTrackingDataBuffer.Add(new EyeTrackingDatum
-                                       {
-                                           TimeStamp = Time.time,
-                                           GazingObject = gazingObject.name,
-                                           GazingTimer = _currentGazingTimer
-                                       });
+            _eyeTrackingExporter.AddData(new EyeTrackingDatum
+                                         {
+                                             TimeStamp = Time.time,
+                                             GazingObject = gazingObject.name,
+                                             GazingTimer = _currentGazingTimer
+                                         }.ToString());
 
             SwitchToNewGazingObject(gazingObject);
         }
@@ -142,12 +111,12 @@ public class EyeTracker : MonoBehaviour
         if (!_currentGazingObject) return;
 
         // Record data if users were previously gazing at something
-        _eyeTrackingDataBuffer.Add(new EyeTrackingDatum
-                                   {
-                                       TimeStamp = Time.time,
-                                       GazingObject = _currentGazingObject.name,
-                                       GazingTimer = _currentGazingTimer
-                                   });
+        _eyeTrackingExporter.AddData(new EyeTrackingDatum
+                                     {
+                                         TimeStamp = Time.time,
+                                         GazingObject = _currentGazingObject.name,
+                                         GazingTimer = _currentGazingTimer
+                                     }.ToString());
 
         ResetGazeTracking();
     }
@@ -166,9 +135,9 @@ public class EyeTracker : MonoBehaviour
 
     private void FlushAllRemainingEyeTrackingData()
     {
-        if (_eyeTrackingDataBuffer.Count == 0) return;
+        if (_eyeTrackingExporter.BufferCount == 0) return;
 
-        FlushEyeTrackingData();
+        _eyeTrackingExporter.ForceFlush();
     }
 
     private void OnDestroy()
@@ -182,4 +151,9 @@ internal record EyeTrackingDatum
     public float TimeStamp { get; set; }
     public string GazingObject { get; set; }
     public float GazingTimer { get; set; }
+
+    public override string ToString()
+    {
+        return $"{TimeStamp},{GazingObject},{GazingTimer}";
+    }
 }

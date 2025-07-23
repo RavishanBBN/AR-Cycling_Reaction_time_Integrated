@@ -110,7 +110,7 @@ public abstract class SpawnObject : MonoBehaviour
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Start()
     {
         objectSpawnDisplacement = Vector3.right * xDisplacement + Vector3.forward * 15;
         initialiseSignDisplacement();
@@ -121,7 +121,7 @@ public abstract class SpawnObject : MonoBehaviour
 
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         if (getUserDistance() >= distanceUntilSpawnObject)
         {
