@@ -14,12 +14,18 @@ public abstract class SpawnObject : MonoBehaviour
     private GameObject currentObject;
     private GameObject previousObject;
     private Vector3 userPositionTracker;
-
+    [SerializeField] private AudioSource audioSource;
 
 
     //METHODS
     protected abstract GameObject spawnObject(Vector3 position, Quaternion rotation);
 
+    private GameObject CreateObject(Vector3 position, Quaternion rotation)
+    {
+        audioSource.Play();
+
+        return spawnObject(position, rotation);
+    }
 
     private float dotProduct2(Vector2 a, Vector2 b)
     {
@@ -48,7 +54,8 @@ public abstract class SpawnObject : MonoBehaviour
     private float getUserDistance()
     {
         //x and z coordinates for Vector3, x and y coordinates for Vector2
-        Vector2 displacementVector = new Vector2(userCamera.transform.position.x - userInitialPosition.x, userCamera.transform.position.z - userInitialPosition.y);
+        Vector2 displacementVector = new Vector2(userCamera.transform.position.x - userInitialPosition.x,
+                                                 userCamera.transform.position.z - userInitialPosition.y);
         return displacementVector.magnitude;
     }
 
@@ -62,7 +69,9 @@ public abstract class SpawnObject : MonoBehaviour
     private Vector3 getMovementVector()
     {
         Vector3 userPosition = userCamera.transform.position;
-        Vector3 movementVector = new Vector3(userPosition.x - userPositionTracker.x, userPositionTracker.y - userPosition.y, userPosition.z - userPositionTracker.z);
+        Vector3 movementVector = new Vector3(userPosition.x - userPositionTracker.x,
+                                             userPositionTracker.y - userPosition.y,
+                                             userPosition.z - userPositionTracker.z);
 
         return movementVector;
     }
@@ -77,16 +86,19 @@ public abstract class SpawnObject : MonoBehaviour
         Vector2 c = referenceVector; //Relative forward
 
         return new Vector2(
-            dotProduct2(a, b) / (a.magnitude * b.magnitude) * c.x - crossProduct2(a, b) / (a.magnitude * b.magnitude) * c.y,
-            crossProduct2(a, b) / (a.magnitude * b.magnitude) * c.x + dotProduct2(a, b) / (a.magnitude * b.magnitude) * c.y
-        );
+                           dotProduct2(a, b) / (a.magnitude * b.magnitude) * c.x -
+                           crossProduct2(a, b) / (a.magnitude * b.magnitude) * c.y,
+                           crossProduct2(a, b) / (a.magnitude * b.magnitude) * c.x +
+                           dotProduct2(a, b) / (a.magnitude * b.magnitude) * c.y
+                          );
     }
 
 
     private float getFacingAngle(Vector2 referenceVector)
     {
         Vector2 forwardVector = new Vector2(0, 1);
-        return Mathf.Acos(dotProduct2(forwardVector, referenceVector) / (forwardVector.magnitude * referenceVector.magnitude)) * 180 / Mathf.PI;
+        return Mathf.Acos(dotProduct2(forwardVector, referenceVector) /
+                          (forwardVector.magnitude * referenceVector.magnitude)) * 180 / Mathf.PI;
     }
 
 
@@ -102,7 +114,9 @@ public abstract class SpawnObject : MonoBehaviour
     {
         objectSpawnDisplacement = Vector3.right * xDisplacement + Vector3.forward * 15;
         initialiseSignDisplacement();
-        currentObject = spawnObject(userCamera.transform.position + objectSpawnDisplacement + Vector3.up * yDisplacement, transform.rotation);
+        currentObject =
+            CreateObject(userCamera.transform.position + objectSpawnDisplacement + Vector3.up * yDisplacement,
+                         transform.rotation);
     }
 
 
@@ -112,15 +126,19 @@ public abstract class SpawnObject : MonoBehaviour
         if (getUserDistance() >= distanceUntilSpawnObject)
         {
             Vector2 referenceVector = unitVector2(getVector2(getMovementVector()));
-            Vector2 relativeSpawnDisplacementUnit2 = getRelativeVector(referenceVector, getVector2(objectSpawnDisplacement));
-            Vector3 relativeSpawnDisplacementUnit = new Vector3(relativeSpawnDisplacementUnit2.x, 0, relativeSpawnDisplacementUnit2.y);
+            Vector2 relativeSpawnDisplacementUnit2 =
+                getRelativeVector(referenceVector, getVector2(objectSpawnDisplacement));
+            Vector3 relativeSpawnDisplacementUnit =
+                new Vector3(relativeSpawnDisplacementUnit2.x, 0, relativeSpawnDisplacementUnit2.y);
             Vector3 relativeSpawnDisplacement = relativeSpawnDisplacementUnit * objectSpawnDisplacement.magnitude;
             Destroy(previousObject);
             previousObject = currentObject;
             initialiseSignDisplacement();
 
             Quaternion objectRotation = Quaternion.Euler(0, -getFacingAngle(referenceVector), 0);
-            currentObject = spawnObject(userCamera.transform.position + relativeSpawnDisplacement + Vector3.up * yDisplacement, objectRotation);
+            currentObject =
+                CreateObject(userCamera.transform.position + relativeSpawnDisplacement + Vector3.up * yDisplacement,
+                             objectRotation);
         }
 
         Vector3 userPosition = userCamera.transform.position;
