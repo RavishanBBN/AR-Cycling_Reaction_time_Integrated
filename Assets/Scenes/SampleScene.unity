@@ -443,6 +443,8 @@ MonoBehaviour:
   gazeInteractor: {fileID: 1727980922}
   gazeIndicator: {fileID: 5106148382731904134, guid: cabddb8db8580af4cab426112ffcc9d9, type: 3}
   userCamera: {fileID: 777067282}
+  exportInterval: 2
+  exportFileName: eye-tracking
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
