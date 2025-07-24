@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public abstract class SpawnObject : MonoBehaviour
 {
@@ -15,7 +17,12 @@ public abstract class SpawnObject : MonoBehaviour
     private GameObject previousObject;
     private Vector3 userPositionTracker;
     [SerializeField] private AudioSource audioSource;
+    private CsvExporter _gameObjectSpawnTimeExporter;
 
+    [Header("Export Settings")] [SerializeField]
+    private string exportFileName = "notification-spawn-time";
+
+    [SerializeField] private float exportInterval = 1f;
 
     //METHODS
     protected abstract GameObject spawnObject(Vector3 position, Quaternion rotation);
@@ -108,6 +115,16 @@ public abstract class SpawnObject : MonoBehaviour
         distanceUntilSpawnObject = getRandomDistance();
     }
 
+    private void Awake()
+    {
+        var timeStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        var gameObjectSpawnTimeFilePath = Application.persistentDataPath + $"/{exportFileName}_{timeStamp}.csv";
+        const string csvHeader = "Time (s),Object";
+        _gameObjectSpawnTimeExporter = new CsvExporter(gameObjectSpawnTimeFilePath, exportInterval, csvHeader);
+
+        Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
+    }
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
@@ -117,6 +134,12 @@ public abstract class SpawnObject : MonoBehaviour
         currentObject =
             CreateObject(userCamera.transform.position + objectSpawnDisplacement + Vector3.up * yDisplacement,
                          transform.rotation);
+
+        _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
+                                             {
+                                                 TimeStamp = Time.time,
+                                                 Object = currentObject.name
+                                             }.ToString());
     }
 
 
@@ -139,11 +162,37 @@ public abstract class SpawnObject : MonoBehaviour
             currentObject =
                 CreateObject(userCamera.transform.position + relativeSpawnDisplacement + Vector3.up * yDisplacement,
                              objectRotation);
+
+            _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
+                                                 {
+                                                     TimeStamp = Time.time,
+                                                     Object = currentObject.name
+                                                 }.ToString());
         }
 
         Vector3 userPosition = userCamera.transform.position;
         userPositionTracker.x = userPosition.x;
         userPositionTracker.y = userPosition.y;
         userPositionTracker.z = userPosition.z;
+
+        _gameObjectSpawnTimeExporter.ExportRecentData();
+    }
+
+    private void OnDestroy()
+    {
+        if (_gameObjectSpawnTimeExporter.BufferCount == 0) return;
+
+        _gameObjectSpawnTimeExporter.ForceFlush();
+    }
+}
+
+internal record GameObjectSpawnTimeDatum
+{
+    public float TimeStamp { get; set; }
+    public string Object { get; set; }
+
+    public override string ToString()
+    {
+        return $"{TimeStamp},{Object}";
     }
 }

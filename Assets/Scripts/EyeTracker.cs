@@ -18,8 +18,6 @@ public class EyeTracker : MonoBehaviour
 
     [Header("Export Settings")] [SerializeField]
     private string exportFileName = "eye-tracking";
-
-    private string _eyeTrackingFilePath;
     private CsvExporter _eyeTrackingExporter;
 
     //METHODS
@@ -43,7 +41,7 @@ public class EyeTracker : MonoBehaviour
 
         _eyeTrackingExporter = new CsvExporter(eyeTrackingFilePath, exportInterval, csvHeader);
 
-        Debug.Log($"Exporting velocity data to {_eyeTrackingFilePath}");
+        Debug.Log($"Exporting eye tracking data to {eyeTrackingFilePath}");
     }
 
     private void Start()
@@ -59,7 +57,7 @@ public class EyeTracker : MonoBehaviour
 
     private void UpdateGazeTracking()
     {
-        const float maxDistance             = 3f;
+        const float maxDistance             = 50f;
         const float fallbackPointerDistance = 2f;
 
         var rayOrigin    = gazeInteractor.rayOriginTransform.position;
@@ -114,7 +112,7 @@ public class EyeTracker : MonoBehaviour
         _eyeTrackingExporter.AddData(new EyeTrackingDatum
                                      {
                                          TimeStamp = Time.time,
-                                         GazingObject = _currentGazingObject.name,
+                                         GazingObject = "Nothing",
                                          GazingTimer = _currentGazingTimer
                                      }.ToString());
 

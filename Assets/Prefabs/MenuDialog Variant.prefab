@@ -378,7 +378,7 @@ MonoBehaviour:
   lifetime: 0
   referenceDirection: 1
   minDistance: 0.5
-  maxDistance: 0
+  maxDistance: 0.75
   minViewDegrees: 0
   maxViewDegrees: 30
   aspectV: 1

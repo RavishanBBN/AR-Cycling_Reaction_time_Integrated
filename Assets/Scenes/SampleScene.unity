@@ -169,6 +169,8 @@ MonoBehaviour:
   xDisplacement: -1
   yDisplacement: 0
   audioSource: {fileID: 534192343}
+  exportFileName: notification-spawn-time
+  exportInterval: 1
   models:
   - models:
     - model: {fileID: 919132149155446097, guid: bcf55821dc6c03b4e898efa927902040, type: 3}
@@ -368,6 +370,8 @@ MonoBehaviour:
   xDisplacement: -2
   yDisplacement: 0
   audioSource: {fileID: 534192343}
+  exportFileName: notification-spawn-time
+  exportInterval: 1
   signObject: {fileID: 7004894785395504756, guid: 60426f2fe3aaebc498936f41f8ecf827, type: 3}
   signMaterial: {fileID: 2100000, guid: 814114abfa8d90548b4eab37b547e9ef, type: 2}
   textures:
@@ -662,6 +666,8 @@ MonoBehaviour:
   xDisplacement: 0
   yDisplacement: 6
   audioSource: {fileID: 534192343}
+  exportFileName: notification-spawn-time
+  exportInterval: 1
   signObject: {fileID: 5386369811662415387, guid: cf042aeecbfff944a9d2b642d84de96d, type: 3}
   signMaterial: {fileID: 2100000, guid: 814114abfa8d90548b4eab37b547e9ef, type: 2}
   textures:
