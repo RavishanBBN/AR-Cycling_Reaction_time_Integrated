@@ -1,104 +1,157 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using MixedReality.Toolkit.Input;
 using UnityEngine;
 
-
-
 public class EyeTracker : MonoBehaviour
 {
     //ATTRIBUTES
-    private StreamWriter trackerData;
     public GazeInteractor gazeInteractor;
     public GameObject gazeIndicator;
-    private GameObject gazePointer;
+    private GameObject _gazePointer;
     public GameObject userCamera;
-    private GameObject currentGazingObject = null;
-    private float currentGazingTimer = 0;
+    private GameObject _currentGazingObject;
+    private float _currentGazingTimer;
 
+    [SerializeField] private float exportInterval = 1f;
 
+    [Header("Export Settings")] [SerializeField]
+    private string exportFileName = "eye-tracking";
+    private CsvExporter _eyeTrackingExporter;
 
     //METHODS
-    private GameObject getGazingObject(RaycastHit hit)
+    private static GameObject GetGazingObject(RaycastHit hit)
     {
-        Transform currentObject = hit.collider.gameObject.transform;
-        while (currentObject.parent != null)
+        var currentObject = hit.collider.gameObject.transform;
+
+        while (currentObject.parent)
         {
             currentObject = currentObject.parent;
         }
+
         return currentObject.gameObject;
     }
 
-
-    private void WriteTrackingData()
-    {
-        // var relativePoint = objectOfInterest.transform.position - hitPoint;
-        // trackerData.WriteLine(FormattableString.Invariant($"{relativePoint.x},{relativePoint.y},{relativePoint.z}"));
-        Debug.Log($"{currentGazingObject}, {currentGazingTimer}");
-        trackerData.WriteLine(FormattableString.Invariant($"{currentGazingObject}, {currentGazingTimer}"));
-    }
-
-
     private void Awake()
     {
-        string trackerDataPath = Path.Combine(Application.persistentDataPath, "eyeTracking.csv");
-        trackerData = new StreamWriter(trackerDataPath);
-        trackerData.AutoFlush = true;
-    }
+        var          timeStamp           = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        var          eyeTrackingFilePath = Application.persistentDataPath + $"/{exportFileName}_{timeStamp}.csv";
+        const string csvHeader           = "Time (s),GazingObject,GazingTimer (s)";
 
+        _eyeTrackingExporter = new CsvExporter(eyeTrackingFilePath, exportInterval, csvHeader);
+
+        Debug.Log($"Exporting eye tracking data to {eyeTrackingFilePath}");
+    }
 
     private void Start()
     {
-        gazePointer = Instantiate(gazeIndicator);
+        _gazePointer = Instantiate(gazeIndicator);
     }
-
 
     private void Update()
     {
-        var ray = new Ray(gazeInteractor.rayOriginTransform.position, gazeInteractor.rayOriginTransform.forward * 3);
-        if (Physics.Raycast(ray, out var hit))
+        UpdateGazeTracking();
+        _eyeTrackingExporter.ExportRecentData();
+    }
+
+    private void UpdateGazeTracking()
+    {
+        const float maxDistance             = 50f;
+        const float fallbackPointerDistance = 2f;
+
+        var rayOrigin    = gazeInteractor.rayOriginTransform.position;
+        var rayDirection = gazeInteractor.rayOriginTransform.forward;
+        var ray          = new Ray(rayOrigin, rayDirection);
+
+        if (Physics.Raycast(ray, out var hit, maxDistance))
         {
-            //Update gaze indicator position
-            gazePointer.transform.position = hit.point;
-
-            //Get what the user is currently gazing at this frame
-            GameObject gazingObject = getGazingObject(hit);
-
-            //If still gazing at the same object, increment timer
-            if (gazingObject == currentGazingObject)
-            {
-                currentGazingTimer += Time.deltaTime * 1000f;
-            }
-
-            //Otherwise, record data (if applicable, i.e. was looking at something), reset timer and set to look at new object
-            else
-            {
-                if (currentGazingObject != null)
-                {
-                    WriteTrackingData();
-                }
-                currentGazingObject = gazingObject;
-                currentGazingTimer = 0;   
-            }
+            HandleGazeHit(hit);
         }
         else
         {
-            //Reset gaze indicator position
-            gazePointer.transform.position = userCamera.transform.position - Vector3.down * 2;
-
-            //Check if the user was gazing at something and if so, record data and reset timer
-            if (currentGazingObject != null)
-            {
-                WriteTrackingData();
-                currentGazingObject = null;
-                currentGazingTimer = 0;   
-            }
+            HandleGazeMiss(fallbackPointerDistance);
         }
     }
-    
+
+    private void HandleGazeHit(RaycastHit hit)
+    {
+        // Update gaze indicator position
+        _gazePointer.transform.position = hit.point;
+
+        // Get what the user is currently gazing at this frame
+        var gazingObject = GetGazingObject(hit);
+
+        if (gazingObject == _currentGazingObject)
+        {
+            // Still gazing at the same object, increment timer
+            _currentGazingTimer += Time.deltaTime;
+        }
+        else
+        {
+            // Gazing at a different object
+            _eyeTrackingExporter.AddData(new EyeTrackingDatum
+                                         {
+                                             TimeStamp = Time.time,
+                                             GazingObject = gazingObject.name,
+                                             GazingTimer = _currentGazingTimer
+                                         }.ToString());
+
+            SwitchToNewGazingObject(gazingObject);
+        }
+    }
+
+    private void HandleGazeMiss(float fallbackDistance)
+    {
+        // Reset gaze indicator position below camera
+        _gazePointer.transform.position = userCamera.transform.position - Vector3.down * fallbackDistance;
+
+        if (!_currentGazingObject) return;
+
+        // Record data if users were previously gazing at something
+        _eyeTrackingExporter.AddData(new EyeTrackingDatum
+                                     {
+                                         TimeStamp = Time.time,
+                                         GazingObject = "Nothing",
+                                         GazingTimer = _currentGazingTimer
+                                     }.ToString());
+
+        ResetGazeTracking();
+    }
+
+    private void SwitchToNewGazingObject(GameObject newObject)
+    {
+        _currentGazingObject = newObject;
+        _currentGazingTimer = 0f;
+    }
+
+    private void ResetGazeTracking()
+    {
+        _currentGazingObject = null;
+        _currentGazingTimer = 0f;
+    }
+
+    private void FlushAllRemainingEyeTrackingData()
+    {
+        if (_eyeTrackingExporter.BufferCount == 0) return;
+
+        _eyeTrackingExporter.ForceFlush();
+    }
 
     private void OnDestroy()
     {
-        trackerData.Close();
+        FlushAllRemainingEyeTrackingData();
+    }
+}
+
+internal record EyeTrackingDatum
+{
+    public float TimeStamp { get; set; }
+    public string GazingObject { get; set; }
+    public float GazingTimer { get; set; }
+
+    public override string ToString()
+    {
+        return $"{TimeStamp},{GazingObject},{GazingTimer}";
     }
 }
