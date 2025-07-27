@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &654480811
 Transform:
   m_ObjectHideFlags: 0
@@ -292,7 +292,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1163151100
 Transform:
   m_ObjectHideFlags: 0
@@ -327,6 +327,8 @@ MonoBehaviour:
   signObject: {fileID: 7004894785395504756, guid: 60426f2fe3aaebc498936f41f8ecf827, type: 3}
   signMaterial: {fileID: 2100000, guid: 814114abfa8d90548b4eab37b547e9ef, type: 2}
   audioSource: {fileID: 1163151102}
+  exportFileName: notification-spawn-time
+  exportInterval: 1
 --- !u!82 &1163151102
 AudioSource:
   m_ObjectHideFlags: 0
@@ -441,7 +443,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1173149484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -467,10 +469,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2f764c1f169293439d82f9259989c41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  notifications:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  notificationControl: {fileID: 1163151096}
   gazeControl: {fileID: 654480810}
   dialogPool: {fileID: 1173149484}
   menuDialog: {fileID: 290411856905126350, guid: a4a53f88809976447b0ae78544494c5d, type: 3}

@@ -5,7 +5,7 @@ using Random = UnityEngine.Random;
 
 public class MenuControl : MonoBehaviour
 {
-    [SerializeField] private List<GameObject> notifications;
+    [SerializeField] private GameObject notificationControl;
     [SerializeField] private GameObject gazeControl;
     public DialogPool dialogPool;
     [SerializeField] private GameObject menuDialog;
@@ -32,7 +32,7 @@ public class MenuControl : MonoBehaviour
                                         dialog.Dismiss();
 
                                         Debug.Log("Starting experiment!");
-                                        SelectARandomNotification();
+                                        EnableNotifications();
                                         StartEyeTracking();
                                     })
               .SetNegative("Quit", _ =>
@@ -60,10 +60,8 @@ public class MenuControl : MonoBehaviour
         SetGameObjectActive(gazeControl, true);
     }
 
-    private void SelectARandomNotification()
+    private void EnableNotifications()
     {
-        var randomIndex = Random.Range(0, notifications.Count);
-
-        SetGameObjectActive(notifications[randomIndex], true);
+        SetGameObjectActive(notificationControl, true);
     }
 }
