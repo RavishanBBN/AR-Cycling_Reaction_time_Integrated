@@ -12,12 +12,12 @@ public class SpinningAnimation : MonoBehaviour
 
 
     //METHODS
-    public void setActive(bool state)
+    public void SetActive(bool state)
     {
         active = state;
     }
 
-    public void setDuration(float period)
+    public void SetDuration(float period)
     {
         duration = period;
     }

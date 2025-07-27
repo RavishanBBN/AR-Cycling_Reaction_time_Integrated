@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6872027350335680012}
   - component: {fileID: 6742256149571740620}
   m_Layer: 0
-  m_Name: SideSignQuad
+  m_Name: 2DSign
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 814114abfa8d90548b4eab37b547e9ef, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
