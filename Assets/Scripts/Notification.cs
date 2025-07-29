@@ -5,9 +5,10 @@ using UnityEngine;
 public abstract class Notification : Object
 {
     //ATTRIBUTES
-    public Vector3 position;
-    public Vector3 eulerRotation;
-    public Vector3 localScale;
+    protected Vector3 position;
+    protected Vector3 eulerRotation;
+    protected Vector3 localScale;
+    protected bool playAudio;
 
 
 
@@ -33,6 +34,12 @@ public abstract class Notification : Object
     public Vector3 GetScale()
     {
         return localScale;
+    }
+
+
+    public bool GetPlayAudio()
+    {
+        return playAudio;
     }
 
 

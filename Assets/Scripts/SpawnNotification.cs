@@ -27,18 +27,18 @@ public class SpawnNotification : MonoBehaviour
 
 
     //METHODS
-    public Sprite CreateSprite(Vector3 position, Vector3 eulerRotation, Vector3 localScale, string textureLocation)
+    public Sprite CreateSprite(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string textureLocation)
     {
         Texture texture = Resources.Load<Texture>(textureLocation);
-        return new Sprite(position, eulerRotation, localScale, texture, signObject, signMaterial);
+        return new Sprite(position, eulerRotation, localScale, playAudio, texture, signObject, signMaterial);
     }
 
 
-    public Model CreateModel(Vector3 position, Vector3 eulerRotation, Vector3 localScale, string modelLocation, float spinningPeriod, string animatorLocation = null)
+    public Model CreateModel(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string modelLocation, float spinningPeriod, string animatorLocation = null)
     {
         GameObject model = Resources.Load<GameObject>(modelLocation);
         RuntimeAnimatorController animator = Resources.Load<RuntimeAnimatorController>(animatorLocation);
-        return new Model(position, eulerRotation, localScale, model, spinningPeriod, animator);
+        return new Model(position, eulerRotation, localScale, playAudio, model, spinningPeriod, animator);
     }
 
 
@@ -47,7 +47,11 @@ public class SpawnNotification : MonoBehaviour
         Destroy(previousObject);
         previousObject = currentObject;
         currentObject = notification.SpawnObject();
-        audioSource.Play();
+
+        if (notification.GetPlayAudio())
+        { 
+            audioSource.Play();
+        }
 
         _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
         {
@@ -64,8 +68,8 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<Notification>
             {
-                CreateSprite(new Vector3(-2, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), "SignImages/40_zone"),
-                CreateModel(new Vector3(0, 6, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), "Models/Cafe/Cafe", 5),
+                CreateSprite(new Vector3(-2, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
+                CreateModel(new Vector3(0, 6, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
             }
         };
 
