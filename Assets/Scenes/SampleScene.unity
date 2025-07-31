@@ -327,6 +327,8 @@ MonoBehaviour:
   signObject: {fileID: 7004894785395504756, guid: 60426f2fe3aaebc498936f41f8ecf827, type: 3}
   signMaterial: {fileID: 2100000, guid: 814114abfa8d90548b4eab37b547e9ef, type: 2}
   audioSource: {fileID: 1163151102}
+  timeBetweenAudio: 5
+  timeBetweenNotificationAndAudio: 5
   exportFileName: notification-spawn-time
   exportInterval: 1
 --- !u!82 &1163151102

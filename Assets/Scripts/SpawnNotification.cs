@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
+
 public class SpawnNotification : MonoBehaviour
 {
     //ATTRIBUTES
@@ -14,6 +15,12 @@ public class SpawnNotification : MonoBehaviour
     public GameObject signObject;
     public Material signMaterial;
     public AudioSource audioSource;
+    public float timeBetweenAudio;
+    public float timeBetweenNotificationAndAudio;
+    private float timeBetweenAudioTimer = 0;
+    private float timeBetweenNotificationAndAudioTimer = 0;
+    private float rngCheckTimer = 0f;
+    private float rngCheckDuration = 1f;
     private GameObject currentObject;
     private GameObject previousObject;
     private CsvExporter _gameObjectSpawnTimeExporter;
@@ -49,8 +56,8 @@ public class SpawnNotification : MonoBehaviour
         currentObject = notification.SpawnObject();
 
         if (notification.GetPlayAudio())
-        { 
-            audioSource.Play();
+        {
+            playAudio();
         }
 
         _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
@@ -58,6 +65,15 @@ public class SpawnNotification : MonoBehaviour
             TimeStamp = Time.time,
             Object = currentObject.name
         }.ToString());
+
+        timeBetweenNotificationAndAudioTimer = 0;
+    }
+
+
+    private void playAudio()
+    {
+        timeBetweenAudioTimer = 0;
+        audioSource.Play();
     }
 
 
@@ -77,19 +93,49 @@ public class SpawnNotification : MonoBehaviour
         notifications.Reverse(); //Reverse notification list items so that items are popped from the end (O(1) time as opposed to O(n)).
     }
 
+
     // Update is called once per frame
     void Update()
     {
+        //If the notification list is not empty.
         if (notifications.Count > 0)
         {
+            //Get the last notification.
             Notification notification = notifications[notifications.Count - 1];
+            
+            //If the user is in range of the notification.
             if (notification.CheckSpawn(userCamera.transform.position, spawnDistance))
             {
+                //Spawn the notification.
                 SpawnNotificationInstance(notification);
+
+                //Pop the notification from the list (since the notification is at the end of the list, this is O(1) time).
                 notifications.RemoveAt(notifications.Count - 1);
             }
         }
 
+        //Try playing random audio if applicable.
+        if (timeBetweenAudioTimer >= timeBetweenAudio && timeBetweenNotificationAndAudioTimer >= timeBetweenNotificationAndAudio)
+        {
+            rngCheckTimer += Time.deltaTime;
+
+            if (rngCheckTimer >= rngCheckDuration)
+            {
+                float rng = UnityEngine.Random.Range(0f, 1f);
+                Debug.Log(rng);
+                if (rng < 0.25f)
+                {
+                    playAudio();
+                }
+                rngCheckTimer = 0f;
+            }
+        }
+        
+        //Increment audio timers.
+        timeBetweenAudioTimer += Time.deltaTime;
+        timeBetweenNotificationAndAudioTimer += Time.deltaTime;
+
+        //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
     }
 
