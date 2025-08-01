@@ -86,6 +86,7 @@ public class SpawnNotification : MonoBehaviour
             {
                 CreateSprite(new Vector3(-2, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
                 CreateModel(new Vector3(0, 6, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
+                CreateSprite(new Vector3(-2, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
             }
         };
 
@@ -122,7 +123,6 @@ public class SpawnNotification : MonoBehaviour
             if (rngCheckTimer >= rngCheckDuration)
             {
                 float rng = UnityEngine.Random.Range(0f, 1f);
-                Debug.Log(rng);
                 if (rng < 0.25f)
                 {
                     playAudio();
