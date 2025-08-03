@@ -17,6 +17,7 @@ public class SpawnNotification : MonoBehaviour
     public AudioSource audioSource;
     public float timeBetweenAudio;
     public float timeBetweenNotificationAndAudio;
+    public bool showAllNotifications;
     private float timeBetweenAudioTimer = 0;
     private float timeBetweenNotificationAndAudioTimer = 0;
     private float rngCheckTimer = 0f;
@@ -92,6 +93,16 @@ public class SpawnNotification : MonoBehaviour
 
         notifications = notificationLists[notificationListIndex];
         notifications.Reverse(); //Reverse notification list items so that items are popped from the end (O(1) time as opposed to O(n)).
+
+        if (showAllNotifications)
+        {
+            foreach (Notification notification in notifications)
+            {
+                SpawnNotificationInstance(notification);
+            }
+
+            notifications.Clear();
+        }
     }
 
 
