@@ -17,6 +17,7 @@ public class SpawnNotification : MonoBehaviour
     public AudioSource audioSource;
     public float timeBetweenAudio;
     public float timeBetweenNotificationAndAudio;
+    public float audioProbability = 0.15f;
     public bool showAllNotifications;
     private float timeBetweenAudioTimer = 0;
     private float timeBetweenNotificationAndAudioTimer = 0;
@@ -94,10 +95,11 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<Notification>
             {
-                CreateModel(new Vector3(-2, 1.5f, 5), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/MacDonalds/MacDonalds", 5),
-                CreateSprite(new Vector3(-2, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
-                CreateModel(new Vector3(0, 6, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
-                CreateSprite(new Vector3(-2, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
+                CreateModel(new Vector3(0, 1.5f, 5), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/MacDonalds/MacDonalds", 5),
+                CreateSprite(new Vector3(0, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
+                CreateModel(new Vector3(0, 1.5f, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
+                CreateSprite(new Vector3(0, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
+                CreateModel(new Vector3(0, 1.5f, 160), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Toilet/Toilet", 5),
             }
         };
 
@@ -146,7 +148,7 @@ public class SpawnNotification : MonoBehaviour
             if (rngCheckTimer >= rngCheckDuration)
             {
                 float rng = UnityEngine.Random.Range(0f, 1f);
-                if (rng < 0.25f)
+                if (rng < audioProbability)
                 {
                     playAudio();
                 }
