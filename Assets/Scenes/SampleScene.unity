@@ -329,6 +329,7 @@ MonoBehaviour:
   audioSource: {fileID: 1163151102}
   timeBetweenAudio: 10
   timeBetweenNotificationAndAudio: 5
+  showAllNotifications: 1
   exportFileName: notification-spawn-time
   exportInterval: 1
 --- !u!82 &1163151102

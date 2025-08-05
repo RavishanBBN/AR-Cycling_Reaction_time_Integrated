@@ -24,6 +24,7 @@ public class SpawnNotification : MonoBehaviour
     private float rngCheckDuration = 1f;
     private GameObject currentObject;
     private GameObject previousObject;
+    private List<GameObject> spawnedObjects;
     private CsvExporter _gameObjectSpawnTimeExporter;
 
     [Header("Export Settings")]
@@ -52,22 +53,30 @@ public class SpawnNotification : MonoBehaviour
 
     private void SpawnNotificationInstance(Notification notification)
     {
-        Destroy(previousObject);
-        previousObject = currentObject;
-        currentObject = notification.SpawnObject();
-
-        if (notification.GetPlayAudio())
+        if (showAllNotifications)
         {
-            playAudio();
+            GameObject notificationInstance = notification.SpawnObject();
+            spawnedObjects.Add(notificationInstance);
         }
-
-        _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
+        else
         {
-            TimeStamp = Time.time,
-            Object = currentObject.name
-        }.ToString());
+            Destroy(previousObject);
+            previousObject = currentObject;
+            currentObject = notification.SpawnObject();
 
-        timeBetweenNotificationAndAudioTimer = 0;
+            if (notification.GetPlayAudio())
+            {
+                playAudio();
+            }
+
+            _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
+            {
+                TimeStamp = Time.time,
+                Object = currentObject.name
+            }.ToString());
+
+            timeBetweenNotificationAndAudioTimer = 0;
+        }
     }
 
 
@@ -85,6 +94,7 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<Notification>
             {
+                CreateModel(new Vector3(-2, 1.5f, 5), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/MacDonalds/MacDonalds", 5),
                 CreateSprite(new Vector3(-2, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
                 CreateModel(new Vector3(0, 6, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
                 CreateSprite(new Vector3(-2, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
@@ -96,6 +106,7 @@ public class SpawnNotification : MonoBehaviour
 
         if (showAllNotifications)
         {
+            spawnedObjects = new List<GameObject>();
             foreach (Notification notification in notifications)
             {
                 SpawnNotificationInstance(notification);
@@ -129,6 +140,7 @@ public class SpawnNotification : MonoBehaviour
         //Try playing random audio if applicable.
         if (timeBetweenAudioTimer >= timeBetweenAudio && timeBetweenNotificationAndAudioTimer >= timeBetweenNotificationAndAudio)
         {
+            Debug.Log("can play sound");
             rngCheckTimer += Time.deltaTime;
 
             if (rngCheckTimer >= rngCheckDuration)
