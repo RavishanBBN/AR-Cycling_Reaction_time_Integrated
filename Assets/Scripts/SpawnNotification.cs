@@ -142,7 +142,6 @@ public class SpawnNotification : MonoBehaviour
         //Try playing random audio if applicable.
         if (timeBetweenAudioTimer >= timeBetweenAudio && timeBetweenNotificationAndAudioTimer >= timeBetweenNotificationAndAudio)
         {
-            Debug.Log("can play sound");
             rngCheckTimer += Time.deltaTime;
 
             if (rngCheckTimer >= rngCheckDuration)
