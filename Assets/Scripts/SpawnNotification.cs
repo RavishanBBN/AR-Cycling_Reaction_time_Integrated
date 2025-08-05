@@ -24,7 +24,7 @@ public class SpawnNotification : MonoBehaviour
     private float rngCheckDuration = 1f;
     private GameObject currentObject;
     private GameObject previousObject;
-    private List<GameObject> spawnedObjects;
+    private Vector3 previousObjectPosition;
     private CsvExporter _gameObjectSpawnTimeExporter;
 
     [Header("Export Settings")]
@@ -66,11 +66,21 @@ public class SpawnNotification : MonoBehaviour
     }
 
 
+    private float GetDistanceSinceNotification()
+    {
+        Vector3 userPosition = userCamera.transform.position;
+        Vector2 distanceVector = new Vector2(previousObjectPosition.x - userPosition.x, previousObjectPosition.z - userPosition.x);
+        return distanceVector.magnitude;
+    }
+
+
     private void SpawnNotificationInstance(Notification notification)
     {
         Destroy(previousObject);
         previousObject = currentObject;
         currentObject = notification.SpawnObject();
+
+        previousObjectPosition = previousObject.transform.position;
 
         if (notification.GetPlayAudio())
         {
@@ -121,10 +131,12 @@ public class SpawnNotification : MonoBehaviour
         if (notifications.Count > 0)
         {
             //Get the last notification.
-            Notification notification = notifications[notifications.Count - 1];
+            (Notification, float) notificationData = notifications[notifications.Count - 1];
+            Notification notification = notificationData.Item1;
+            float distance = notificationData.Item2;
             
             //If the user is in range of the notification.
-            if (notification.CheckSpawn(userCamera.transform.position, spawnDistance))
+            if (GetDistanceSinceNotification() > distance - spawnDistance)
             {
                 //Spawn the notification.
                 SpawnNotificationInstance(notification);
