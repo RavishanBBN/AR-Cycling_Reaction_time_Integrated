@@ -12,11 +12,8 @@ public class Model : Notification
 
 
     //METHODS
-    public Model(Vector3 _position, Vector3 _eulerRotation, Vector3 _localScale, bool _playAudio, GameObject _model, float _spinningPeriod, RuntimeAnimatorController _animatorController)
+    public Model(bool _playAudio, GameObject _model, float _spinningPeriod, RuntimeAnimatorController _animatorController)
     {
-        position = _position;
-        eulerRotation = _eulerRotation;
-        localScale = _localScale;
         playAudio = _playAudio;
         model = _model;
         spinningPeriod = _spinningPeriod;
@@ -65,9 +62,9 @@ public class Model : Notification
     }
 
 
-    public override GameObject SpawnObject()
+    public override GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
-        GameObject modelObject = Instantiate(model, position, GetRotation());
+        GameObject modelObject = Instantiate(model, position, rotation);
         modelObject.transform.localScale = localScale;
         AddStatefulInteractable(modelObject);
         AddCollider(modelObject);

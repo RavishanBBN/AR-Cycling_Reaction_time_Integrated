@@ -6,8 +6,8 @@ using System;
 public class SpawnNotification : MonoBehaviour
 {
     //ATTRIBUTES
-    public List<List<Notification>> notificationLists;
-    private List<Notification> notifications;
+    private List<List<(Notification, float)>> notificationLists;
+    private List<(Notification, float)> notifications;
     public int notificationListIndex = 0;
     public float spawnDistance = 20;
     public GameObject notificationControl;
@@ -18,7 +18,6 @@ public class SpawnNotification : MonoBehaviour
     public float timeBetweenAudio;
     public float timeBetweenNotificationAndAudio;
     public float audioProbability = 0.15f;
-    public bool showAllNotifications;
     private float timeBetweenAudioTimer = 0;
     private float timeBetweenNotificationAndAudioTimer = 0;
     private float rngCheckTimer = 0f;
@@ -37,47 +36,54 @@ public class SpawnNotification : MonoBehaviour
 
 
     //METHODS
-    public Sprite CreateSprite(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string textureLocation)
+    // public Sprite CreateSprite(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string textureLocation)
+    // {
+    //     Texture texture = Resources.Load<Texture>(textureLocation);
+    //     return new Sprite(position, eulerRotation, localScale, playAudio, texture, signObject, signMaterial);
+    // }
+
+
+    // public Model CreateModel(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string modelLocation, float spinningPeriod, string animatorLocation = null)
+    // {
+    //     GameObject model = Resources.Load<GameObject>(modelLocation);
+    //     RuntimeAnimatorController animator = Resources.Load<RuntimeAnimatorController>(animatorLocation);
+    //     return new Model(position, eulerRotation, localScale, playAudio, model, spinningPeriod, animator);
+    // }
+
+
+    public Sprite CreateSprite(bool playAudio, string textureLocation)
     {
         Texture texture = Resources.Load<Texture>(textureLocation);
-        return new Sprite(position, eulerRotation, localScale, playAudio, texture, signObject, signMaterial);
+        return new Sprite(playAudio, texture, signObject, signMaterial);
     }
 
 
-    public Model CreateModel(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string modelLocation, float spinningPeriod, string animatorLocation = null)
+    public Model CreateModel(bool playAudio, string modelLocation, float spinningPeriod, string animatorLocation = null)
     {
         GameObject model = Resources.Load<GameObject>(modelLocation);
         RuntimeAnimatorController animator = Resources.Load<RuntimeAnimatorController>(animatorLocation);
-        return new Model(position, eulerRotation, localScale, playAudio, model, spinningPeriod, animator);
+        return new Model(playAudio, model, spinningPeriod, animator);
     }
 
 
     private void SpawnNotificationInstance(Notification notification)
     {
-        if (showAllNotifications)
+        Destroy(previousObject);
+        previousObject = currentObject;
+        currentObject = notification.SpawnObject();
+
+        if (notification.GetPlayAudio())
         {
-            GameObject notificationInstance = notification.SpawnObject();
-            spawnedObjects.Add(notificationInstance);
+            playAudio();
         }
-        else
+
+        _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
         {
-            Destroy(previousObject);
-            previousObject = currentObject;
-            currentObject = notification.SpawnObject();
+            TimeStamp = Time.time,
+            Object = currentObject.name
+        }.ToString());
 
-            if (notification.GetPlayAudio())
-            {
-                playAudio();
-            }
-
-            _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
-            {
-                TimeStamp = Time.time,
-                Object = currentObject.name
-            }.ToString());
-
-            timeBetweenNotificationAndAudioTimer = 0;
-        }
+        timeBetweenNotificationAndAudioTimer = 0;
     }
 
 
@@ -91,31 +97,20 @@ public class SpawnNotification : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        notificationLists = new List<List<Notification>>
-        {
-            new List<Notification>
-            {
-                CreateModel(new Vector3(0, 1.5f, 5), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/MacDonalds/MacDonalds", 5),
-                CreateSprite(new Vector3(0, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
-                CreateModel(new Vector3(0, 1.5f, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
-                CreateSprite(new Vector3(0, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
-                CreateModel(new Vector3(0, 1.5f, 160), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Toilet/Toilet", 5),
-            }
-        };
+        // notificationLists = new List<List<Notification>>
+        // {
+        //     new List<Notification>
+        //     {
+        //         CreateModel(new Vector3(0, 1.5f, 5), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/MacDonalds/MacDonalds", 5),
+        //         CreateSprite(new Vector3(0, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
+        //         CreateModel(new Vector3(0, 1.5f, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
+        //         CreateSprite(new Vector3(0, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
+        //         CreateModel(new Vector3(0, 1.5f, 160), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Toilet/Toilet", 5),
+        //     }
+        // };
 
         notifications = notificationLists[notificationListIndex];
         notifications.Reverse(); //Reverse notification list items so that items are popped from the end (O(1) time as opposed to O(n)).
-
-        if (showAllNotifications)
-        {
-            spawnedObjects = new List<GameObject>();
-            foreach (Notification notification in notifications)
-            {
-                SpawnNotificationInstance(notification);
-            }
-
-            notifications.Clear();
-        }
     }
 
 
