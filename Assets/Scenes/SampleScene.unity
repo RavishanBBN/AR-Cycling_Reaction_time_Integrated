@@ -321,7 +321,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   notificationListIndex: 0
-  spawnDistance: 25
+  spawnDistance: 20
   notificationControl: {fileID: 1163151096}
   userCamera: {fileID: 777067287}
   signObject: {fileID: 7004894785395504756, guid: 60426f2fe3aaebc498936f41f8ecf827, type: 3}
@@ -330,7 +330,6 @@ MonoBehaviour:
   timeBetweenAudio: 10
   timeBetweenNotificationAndAudio: 5
   audioProbability: 0.15
-  showAllNotifications: 0
   exportFileName: notification-spawn-time
   exportInterval: 1
 --- !u!82 &1163151102

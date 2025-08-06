@@ -6,16 +6,18 @@ public class Model : Notification
 {
     //ATTRIBUTES
     private GameObject model;
+    private Vector3 modelScale;
     private float spinningPeriod = 300;
     private RuntimeAnimatorController animatorController;
 
 
 
     //METHODS
-    public Model(bool _playAudio, GameObject _model, float _spinningPeriod, RuntimeAnimatorController _animatorController)
+    public Model(bool _playAudio, GameObject _model, Vector3 _modelScale, float _spinningPeriod, RuntimeAnimatorController _animatorController)
     {
         playAudio = _playAudio;
         model = _model;
+        modelScale = _modelScale;
         spinningPeriod = _spinningPeriod;
         animatorController = _animatorController;
     }
@@ -65,7 +67,8 @@ public class Model : Notification
     public override GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
         GameObject modelObject = Instantiate(model, position, rotation);
-        modelObject.transform.localScale = localScale;
+        Vector3 totalScale = new Vector3(modelScale.x * localScale.x, modelScale.y * localScale.y, modelScale.z * localScale.z);
+        modelObject.transform.localScale = totalScale;
         AddStatefulInteractable(modelObject);
         AddCollider(modelObject);
         AddAnimation(modelObject);
