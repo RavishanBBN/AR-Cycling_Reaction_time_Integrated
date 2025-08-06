@@ -189,10 +189,15 @@ public class SpawnNotification : MonoBehaviour
             new List<(Notification, float)>
             {
                 (CreateModel(false, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
-                (CreateSprite(true, "SignImages/40_zone"), 30),
-                (CreateModel(false, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 40),
+                (CreateSprite(true, "SignImages/40_zone"), 45),
+                (CreateModel(false, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
                 (CreateSprite(false, "SignImages/give_way"), 50),
-                (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 60)
+                (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 50),
+                (CreateModel(false, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 50),
+                (CreateSprite(true, "SignImages/40_zone"), 50),
+                (CreateModel(false, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
+                (CreateSprite(false, "SignImages/give_way"), 50),
+                (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 50)
             }
         };
 
