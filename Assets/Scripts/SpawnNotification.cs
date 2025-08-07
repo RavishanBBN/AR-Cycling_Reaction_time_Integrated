@@ -23,11 +23,12 @@ public class SpawnNotification : MonoBehaviour
     private float timeBetweenNotificationAndAudioTimer = 0;
     private float rngCheckTimer = 0f;
     private float rngCheckDuration = 1f;
+    private float distanceUntilSpawnObject;
+    private float initialLeftOverDistance;
+    private Vector2 userInitialPosition;
     private GameObject currentObject;
     private GameObject previousObject;
-    private Vector3 currentObjectPosition;
     private Vector3 userPositionTracker;
-    private bool passedCurrentObject = false;
     private CsvExporter _gameObjectSpawnTimeExporter;
 
     [Header("Export Settings")]
@@ -105,23 +106,18 @@ public class SpawnNotification : MonoBehaviour
     }
 
 
-    private float GetSpawnDistance(float notificationDistance)
+    private float GetUserDistance()
     {
-        return Mathf.Min(notificationDistance, spawnDistance);
+        //x and z coordinates for Vector3, x and y coordinates for Vector2
+        Vector2 displacementVector = new Vector2(userCamera.transform.position.x - userInitialPosition.x,
+                                                 userCamera.transform.position.z - userInitialPosition.y);
+        return displacementVector.magnitude;
     }
 
 
-    private float GetDistanceSinceNotification()
+    private Vector3 GetNotificationSpawnPosition(Vector2 referenceVector)
     {
-        Vector3 userPosition = userCamera.transform.position;
-        Vector2 distanceVector = new Vector2(currentObjectPosition.x - userPosition.x, currentObjectPosition.z - userPosition.z);
-        return distanceVector.magnitude;
-    }
-
-
-    private Vector3 GetNotificationSpawnPosition(Vector2 referenceVector, float notificationDistance)
-    {
-        Vector2 objectSpawnDisplacement = new Vector2(0, GetSpawnDistance(notificationDistance));
+        Vector2 objectSpawnDisplacement = new Vector2(0, spawnDistance);
         Vector2 relativeSpawnDisplacementUnit2 = GetRelativeVector(referenceVector, objectSpawnDisplacement);
         Vector3 relativeSpawnDisplacementUnit = new Vector3(relativeSpawnDisplacementUnit2.x, 0, relativeSpawnDisplacementUnit2.y);
         Vector3 relativeSpawnDisplacement = relativeSpawnDisplacementUnit * objectSpawnDisplacement.magnitude;
@@ -141,6 +137,20 @@ public class SpawnNotification : MonoBehaviour
     }
 
 
+    private float GetNextDistance()
+    {
+        if (notifications.Count > 0)
+        {
+            (Notification, float) newNotificationData = notifications[notifications.Count - 1];
+            return newNotificationData.Item2;
+        }
+        else
+        {
+            return Mathf.Infinity;
+        }
+    }
+
+
     private void SpawnNotificationInstance(Notification notification, float distance)
     {
         Destroy(previousObject);
@@ -150,14 +160,14 @@ public class SpawnNotification : MonoBehaviour
         Vector2 referenceVector = UnitVector2(movementVector2);
         if (movementVector2.magnitude == 0)
         {
-            currentObject = notification.SpawnObject(new Vector3(0, 0, GetSpawnDistance(distance)), Quaternion.Euler(0, 0, 0), new Vector3(1, 1, 1));
+            currentObject = notification.SpawnObject(new Vector3(0, 0, Mathf.Min(distance, spawnDistance)), Quaternion.Euler(0, 0, 0), new Vector3(1, 1, 1));
         }
         else
         {
-            currentObject = notification.SpawnObject(GetNotificationSpawnPosition(referenceVector, distance), GetNotificationSpawnRotation(referenceVector), new Vector3(1, 1, 1));
+            currentObject = notification.SpawnObject(GetNotificationSpawnPosition(referenceVector), GetNotificationSpawnRotation(referenceVector), new Vector3(1, 1, 1));
         }
-        currentObjectPosition = currentObject.transform.position;
-        passedCurrentObject = false;
+
+        userInitialPosition = new Vector2(userCamera.transform.position.x, userCamera.transform.position.z);
 
         if (notification.GetPlayAudio())
         {
@@ -171,6 +181,29 @@ public class SpawnNotification : MonoBehaviour
         }.ToString());
 
         timeBetweenNotificationAndAudioTimer = 0;
+    }
+
+
+    private void SpawnNextNotification()
+    {
+        if (notifications.Count > 0)
+        {
+            (Notification, float) notificationData = notifications[notifications.Count - 1];
+            Notification notification = notificationData.Item1;
+            float distance = notificationData.Item2;
+            SpawnNotificationInstance(notification, distance);
+            notifications.RemoveAt(notifications.Count - 1);
+            float nextDistance = GetNextDistance();
+            distanceUntilSpawnObject = nextDistance - initialLeftOverDistance;
+            if (nextDistance < initialLeftOverDistance)
+            {
+                initialLeftOverDistance -= nextDistance;
+            }
+            else
+            {
+                initialLeftOverDistance = 0;
+            }
+        }
     }
 
 
@@ -203,18 +236,26 @@ public class SpawnNotification : MonoBehaviour
 
         notifications = notificationLists[notificationListIndex];
         notifications.Reverse(); //Reverse notification list items so that items are popped from the end (O(1) time as opposed to O(n)).
+
+        (Notification, float) firstNotificationData = notifications[notifications.Count - 1];
+        Notification firstNotification = firstNotificationData.Item1;
+        float firstNotificationDistance = firstNotificationData.Item2;
+
+        if (firstNotificationDistance < spawnDistance)
+        {
+            initialLeftOverDistance = spawnDistance - firstNotificationDistance;
+            SpawnNextNotification();
+        }
+        else
+        {
+            distanceUntilSpawnObject = firstNotificationDistance;
+        }
     }
 
 
     // Update is called once per frame
     void Update()
     {
-        //Check if the user has passed the current object.
-        if (GetDistanceSinceNotification() < passDistance)
-        {
-            passedCurrentObject = true;
-        }
-
         //If the notification list is not empty.
         if (notifications.Count > 0)
         {
@@ -224,13 +265,9 @@ public class SpawnNotification : MonoBehaviour
             float distance = notificationData.Item2;
 
             //If the user is in range of the notification.
-            if (GetDistanceSinceNotification() > distance - spawnDistance && passedCurrentObject)
+            if (GetUserDistance() >= distanceUntilSpawnObject)
             {
-                //Spawn the notification.
-                SpawnNotificationInstance(notification, distance);
-
-                //Pop the notification from the list (since the notification is at the end of the list, this is O(1) time).
-                notifications.RemoveAt(notifications.Count - 1);
+                SpawnNextNotification();
             }
         }
 
