@@ -322,6 +322,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   notificationListIndex: 0
   spawnDistance: 20
+  passDistance: 10
   notificationControl: {fileID: 1163151096}
   userCamera: {fileID: 777067287}
   signObject: {fileID: 7004894785395504756, guid: 60426f2fe3aaebc498936f41f8ecf827, type: 3}
