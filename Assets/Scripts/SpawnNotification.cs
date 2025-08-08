@@ -221,16 +221,16 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<(Notification, float)>
             {
-                (CreateModel(false, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
+                (CreateModel(true, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
                 (CreateSprite(true, "SignImages/40_zone"), 45),
-                (CreateModel(false, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
-                (CreateSprite(false, "SignImages/give_way"), 50),
+                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
+                (CreateSprite(true, "SignImages/give_way"), 50),
                 (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 50),
-                (CreateModel(false, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 50),
+                (CreateModel(true, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 50),
                 (CreateSprite(true, "SignImages/40_zone"), 50),
-                (CreateModel(false, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
-                (CreateSprite(false, "SignImages/give_way"), 50),
-                (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 50)
+                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
+                (CreateSprite(true, "SignImages/give_way"), 50),
+                (CreateModel(true, "Models/Bicycle/Bicycle", new Vector3(50, 50, 50), 5), 50)
             }
         };
 
@@ -238,7 +238,6 @@ public class SpawnNotification : MonoBehaviour
         notifications.Reverse(); //Reverse notification list items so that items are popped from the end (O(1) time as opposed to O(n)).
 
         (Notification, float) firstNotificationData = notifications[notifications.Count - 1];
-        Notification firstNotification = firstNotificationData.Item1;
         float firstNotificationDistance = firstNotificationData.Item2;
 
         if (firstNotificationDistance < spawnDistance)
