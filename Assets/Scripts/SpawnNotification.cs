@@ -206,15 +206,18 @@ public class SpawnNotification : MonoBehaviour
             new List<(Notification, float)>
             {
                 (CreateModel(true, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
-                (CreateSprite(true, "SignImages/40_zone"), 45),
-                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
-                (CreateSprite(true, "SignImages/give_way"), 50),
-                (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 50),
-                (CreateModel(true, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 50),
-                (CreateSprite(true, "SignImages/40_zone"), 50),
-                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 50),
-                (CreateSprite(true, "SignImages/give_way"), 50),
-                (CreateModel(true, "Models/Bicycle/Bicycle", new Vector3(50, 50, 50), 5), 50)
+                (CreateSprite(true, "SignImages/40_zone"), 65),
+                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 195),
+                (CreateSprite(true, "SignImages/give_way"), 32),
+                (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 100),
+                (CreateSprite(true, "SignImages/keep_left"), 145),
+                (CreateModel(true, "Models/WoodenSpinningTop/WoodenSpinningTop", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 43),
+                (CreateSprite(true, "SignImages/100_kmh"), 128),
+                (CreateModel(true, "Models/Bicycle/Bicycle", new Vector3(30, 30, 30), 5), 108),
+                (CreateSprite(true, "SignImages/traffic_lights"), 86),
+                (CreateModel(true, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 163),
+                (CreateSprite(true, "SignImages/40_zone"), 138),
+                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 155),
             }
         };
 
