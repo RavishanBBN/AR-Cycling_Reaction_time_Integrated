@@ -15,14 +15,8 @@ public class SpawnNotification : MonoBehaviour
     public Camera userCamera;
     public GameObject signObject;
     public Material signMaterial;
-    public AudioSource audioSource;
-    public float timeBetweenAudio;
-    public float timeBetweenNotificationAndAudio;
-    public float audioProbability = 0.15f;
-    private float timeBetweenAudioTimer = 0;
-    private float timeBetweenNotificationAndAudioTimer = 0;
-    private float rngCheckTimer = 0f;
-    private float rngCheckDuration = 1f;
+    public GameObject audioControl;
+    private AudioManager audioManager;
     private float distanceUntilSpawnObject;
     private float initialLeftOverDistance;
     private Vector2 userInitialPosition;
@@ -169,18 +163,13 @@ public class SpawnNotification : MonoBehaviour
 
         userInitialPosition = new Vector2(userCamera.transform.position.x, userCamera.transform.position.z);
 
-        if (notification.GetPlayAudio())
-        {
-            playAudio();
-        }
-
         _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
         {
             TimeStamp = Time.time,
             Object = currentObject.name
         }.ToString());
 
-        timeBetweenNotificationAndAudioTimer = 0;
+        audioManager.OnNotificationSpawn(notification);
     }
 
 
@@ -207,16 +196,11 @@ public class SpawnNotification : MonoBehaviour
     }
 
 
-    private void playAudio()
-    {
-        timeBetweenAudioTimer = 0;
-        audioSource.Play();
-    }
-
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        audioManager = audioControl.GetComponent<AudioManager>();
+
         notificationLists = new List<List<(Notification, float)>>
         {
             new List<(Notification, float)>
@@ -269,26 +253,6 @@ public class SpawnNotification : MonoBehaviour
                 SpawnNextNotification();
             }
         }
-
-        //Try playing random audio if applicable.
-        if (timeBetweenAudioTimer >= timeBetweenAudio && timeBetweenNotificationAndAudioTimer >= timeBetweenNotificationAndAudio)
-        {
-            rngCheckTimer += Time.deltaTime;
-
-            if (rngCheckTimer >= rngCheckDuration)
-            {
-                float rng = UnityEngine.Random.Range(0f, 1f);
-                if (rng < audioProbability)
-                {
-                    playAudio();
-                }
-                rngCheckTimer = 0f;
-            }
-        }
-
-        //Increment audio timers.
-        timeBetweenAudioTimer += Time.deltaTime;
-        timeBetweenNotificationAndAudioTimer += Time.deltaTime;
 
         //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
