@@ -17,17 +17,21 @@ public class SpawnNotification : MonoBehaviour
     public Material signMaterial;
     public GameObject audioControl;
     private AudioManager audioManager;
-    private float distanceUntilSpawnObject;
+    private float distanceToSpawnObject;
     private float initialLeftOverDistance;
     private Vector2 userInitialPosition;
     private GameObject currentObject;
     private GameObject previousObject;
     private Vector3 userPositionTracker;
     private CsvExporter _gameObjectSpawnTimeExporter;
+    private CsvExporter _debugExporter;
+    private float debugWriteTimer = 0f;
+    private float debugWriteDuration = 1f;
 
     [Header("Export Settings")]
     [SerializeField]
-    private string exportFileName = "notification-spawn-time";
+    private string exportNotificationFileName = "notification-spawn-time";
+    private string exportDebugFileName = "debug-data";
 
     [SerializeField] private float exportInterval = 1f;
 
@@ -152,14 +156,20 @@ public class SpawnNotification : MonoBehaviour
 
         Vector3 movementVector2 = GetVector2(GetMovementVector());
         Vector2 referenceVector = UnitVector2(movementVector2);
+        Vector3 notificationPosition;
+        Quaternion notificationRotation;
         if (movementVector2.magnitude == 0)
         {
-            currentObject = notification.SpawnObject(new Vector3(0, 0, Mathf.Min(distance, spawnDistance)), Quaternion.Euler(0, 0, 0), new Vector3(1, 1, 1));
+            notificationPosition = new Vector3(0, 1.5f, Mathf.Min(distance, spawnDistance));
+            notificationRotation = Quaternion.Euler(0, 0, 0);
         }
         else
         {
-            currentObject = notification.SpawnObject(GetNotificationSpawnPosition(referenceVector), GetNotificationSpawnRotation(referenceVector), new Vector3(1, 1, 1));
+            notificationPosition = GetNotificationSpawnPosition(referenceVector);
+            notificationRotation = GetNotificationSpawnRotation(referenceVector);
         }
+
+        currentObject = notification.SpawnObject(notificationPosition, notificationRotation, new Vector3(1, 1, 1));
 
         userInitialPosition = new Vector2(userCamera.transform.position.x, userCamera.transform.position.z);
 
@@ -167,6 +177,17 @@ public class SpawnNotification : MonoBehaviour
         {
             TimeStamp = Time.time,
             Object = currentObject.name
+        }.ToString());
+
+        _debugExporter.AddData(new DebugNotificationDatum
+        {
+            DistanceFromPreviousObject = GetUserDistance(),
+            DistanceToSpawnObject = distanceToSpawnObject,
+            NotificationsRemaining = notifications.Count,
+            MovementVector = GetMovementVector(),
+            UserPosition = userCamera.transform.position,
+            NotificationPosition = notificationPosition,
+            NotificationRotation = notificationRotation
         }.ToString());
 
         audioManager.OnNotificationSpawn(notification);
@@ -183,7 +204,7 @@ public class SpawnNotification : MonoBehaviour
             SpawnNotificationInstance(notification, distance);
             notifications.RemoveAt(notifications.Count - 1);
             float nextDistance = GetNextDistance();
-            distanceUntilSpawnObject = nextDistance - initialLeftOverDistance;
+            distanceToSpawnObject = nextDistance - initialLeftOverDistance;
             if (nextDistance < initialLeftOverDistance)
             {
                 initialLeftOverDistance -= nextDistance;
@@ -234,7 +255,7 @@ public class SpawnNotification : MonoBehaviour
         }
         else
         {
-            distanceUntilSpawnObject = firstNotificationDistance;
+            distanceToSpawnObject = firstNotificationDistance;
         }
     }
 
@@ -251,14 +272,30 @@ public class SpawnNotification : MonoBehaviour
             float distance = notificationData.Item2;
 
             //If the user is in range of the notification.
-            if (GetUserDistance() >= distanceUntilSpawnObject)
+            if (GetUserDistance() >= distanceToSpawnObject)
             {
                 SpawnNextNotification();
             }
         }
 
+        //Step debug data.
+        if (debugWriteTimer < debugWriteDuration)
+        {
+            debugWriteTimer += Time.deltaTime;
+        }
+        else
+        {
+            debugWriteTimer = 0f;
+            _debugExporter.AddData(new DebugStepDatum
+            {
+                DistanceFromPreviousObject = GetUserDistance(),
+                DistanceToSpawnObject = distanceToSpawnObject,
+            }.ToString());
+        }
+
         //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
+        _debugExporter.ExportRecentData();
         
         //Update user position tracker for getting movement vector.
         Vector3 userPosition = userCamera.transform.position;
@@ -271,11 +308,17 @@ public class SpawnNotification : MonoBehaviour
     private void Awake()
     {
         var timeStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        var gameObjectSpawnTimeFilePath = Application.persistentDataPath + $"/{exportFileName}_{timeStamp}.csv";
-        const string csvHeader = "Time (s),Object";
-        _gameObjectSpawnTimeExporter = new CsvExporter(gameObjectSpawnTimeFilePath, exportInterval, csvHeader);
+
+        var gameObjectSpawnTimeFilePath = Application.persistentDataPath + $"/{exportNotificationFileName}_{timeStamp}.csv";
+        const string csvHeaderNotification = "Time (s),Object";
+        _gameObjectSpawnTimeExporter = new CsvExporter(gameObjectSpawnTimeFilePath, exportInterval, csvHeaderNotification);
+
+        var debugDataFilePath = Application.persistentDataPath + $"/{exportDebugFileName} _{timeStamp}.csv";
+        const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),Notifications remaining,Movement vector,User position,Notification position, Notification rotation";
+        _debugExporter = new CsvExporter(debugDataFilePath, exportInterval, csvHeaderDebug);
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
+        Debug.Log($"Exporting debug data to {debugDataFilePath}");
     }
     
 
@@ -296,5 +339,44 @@ internal record GameObjectSpawnTimeDatum
     public override string ToString()
     {
         return $"{TimeStamp},{Object}";
+    }
+}
+
+
+internal record DebugStepDatum
+{
+    public float DistanceFromPreviousObject;
+    public float DistanceToSpawnObject;
+
+    public override string ToString()
+    {
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject}";
+    }
+}
+
+
+internal record DebugNotificationDatum
+{
+    public float DistanceFromPreviousObject;
+    public float DistanceToSpawnObject;
+    public int NotificationsRemaining;
+    public Vector3 MovementVector;
+    public Vector3 UserPosition;
+    public Vector3 NotificationPosition;
+    public Quaternion NotificationRotation;
+
+    private string Vector3ToCSV(Vector3 vector)
+    {
+        return $"{vector.x} {vector.y} {vector.z}";
+    }
+
+    private string QuaternionToCSV(Quaternion quaternion)
+    {
+        return $"{quaternion.x} {quaternion.y} {quaternion.z} {quaternion.w}";
+    }
+
+    public override string ToString()
+    {
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{NotificationsRemaining},{Vector3ToCSV(MovementVector)},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(NotificationPosition)},{QuaternionToCSV(NotificationRotation)}";
     }
 }
