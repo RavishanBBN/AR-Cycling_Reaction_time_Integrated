@@ -171,8 +171,6 @@ public class SpawnNotification : MonoBehaviour
 
         currentObject = notification.SpawnObject(notificationPosition, notificationRotation, new Vector3(1, 1, 1));
 
-        userInitialPosition = new Vector2(userCamera.transform.position.x, userCamera.transform.position.z);
-
         _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
         {
             TimeStamp = Time.time,
@@ -189,6 +187,8 @@ public class SpawnNotification : MonoBehaviour
             NotificationPosition = notificationPosition,
             NotificationRotation = notificationRotation
         }.ToString());
+
+        userInitialPosition = new Vector2(userCamera.transform.position.x, userCamera.transform.position.z);
 
         audioManager.OnNotificationSpawn(notification);
     }
