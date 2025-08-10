@@ -314,7 +314,7 @@ public class SpawnNotification : MonoBehaviour
         _gameObjectSpawnTimeExporter = new CsvExporter(gameObjectSpawnTimeFilePath, exportInterval, csvHeaderNotification);
 
         var debugDataFilePath = Application.persistentDataPath + $"/{exportDebugFileName} _{timeStamp}.csv";
-        const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),Notifications remaining,Movement vector,User position,Notification position, Notification rotation";
+        const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),User position,Movement vector,Notification position, Notification rotation,Notifications remaining";
         _debugExporter = new CsvExporter(debugDataFilePath, exportInterval, csvHeaderDebug);
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
@@ -347,10 +347,17 @@ internal record DebugStepDatum
 {
     public float DistanceFromPreviousObject;
     public float DistanceToSpawnObject;
+    public Vector3 UserPosition;
+
+
+    private string Vector3ToCSV(Vector3 vector)
+    {
+        return $"{vector.x} {vector.y} {vector.z}";
+    }
 
     public override string ToString()
     {
-        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject}";
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)}";
     }
 }
 
@@ -359,11 +366,12 @@ internal record DebugNotificationDatum
 {
     public float DistanceFromPreviousObject;
     public float DistanceToSpawnObject;
-    public int NotificationsRemaining;
-    public Vector3 MovementVector;
     public Vector3 UserPosition;
+    public Vector3 MovementVector;
     public Vector3 NotificationPosition;
     public Quaternion NotificationRotation;
+    public int NotificationsRemaining;
+
 
     private string Vector3ToCSV(Vector3 vector)
     {
@@ -377,6 +385,6 @@ internal record DebugNotificationDatum
 
     public override string ToString()
     {
-        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{NotificationsRemaining},{Vector3ToCSV(MovementVector)},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(NotificationPosition)},{QuaternionToCSV(NotificationRotation)}";
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(MovementVector)},{Vector3ToCSV(NotificationPosition)},{QuaternionToCSV(NotificationRotation)},{NotificationsRemaining}";
     }
 }
