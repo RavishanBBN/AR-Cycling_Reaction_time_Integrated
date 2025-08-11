@@ -290,6 +290,7 @@ public class SpawnNotification : MonoBehaviour
             {
                 DistanceFromPreviousObject = GetUserDistance(),
                 DistanceToSpawnObject = distanceToSpawnObject,
+                UserPosition = userCamera.transform.position
             }.ToString());
         }
 
