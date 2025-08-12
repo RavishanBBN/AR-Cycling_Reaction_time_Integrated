@@ -10,7 +10,6 @@ public class SpawnNotification : MonoBehaviour
     private List<(Notification, float)> notifications;
     public int notificationListIndex = 0;
     public float spawnDistance = 20;
-    public float passDistance = 8;
     public GameObject notificationControl;
     public Camera userCamera;
     public GameObject signObject;
@@ -20,6 +19,7 @@ public class SpawnNotification : MonoBehaviour
     private float distanceToSpawnObject;
     private float initialLeftOverDistance;
     private Vector2 userInitialPosition;
+    private float previousSpeed;
     private GameObject currentObject;
     private GameObject previousObject;
     private Vector3 userPositionTracker;
@@ -154,20 +154,33 @@ public class SpawnNotification : MonoBehaviour
         Destroy(previousObject);
         previousObject = currentObject;
 
-        Vector3 movementVector2 = GetVector2(GetMovementVector());
+        Vector3 movementVector3 = GetMovementVector();
+        Vector2 movementVector2 = GetVector2(movementVector3);
+        float movementSpeed = movementVector2.magnitude;
         Vector2 referenceVector = UnitVector2(movementVector2);
         Vector3 notificationPosition;
         Quaternion notificationRotation;
-        if (movementVector2.magnitude == 0)
-        {
-            notificationPosition = new Vector3(0, 1.5f, Mathf.Min(distance, spawnDistance));
-            notificationRotation = Quaternion.Euler(0, 0, 0);
-        }
-        else
-        {
-            notificationPosition = GetNotificationSpawnPosition(referenceVector);
-            notificationRotation = GetNotificationSpawnRotation(referenceVector);
-        }
+
+        // //Detect teleportation.
+        // if (movementSpeed > previousSpeed * 10)
+        // {
+        //     userCamera.transform.position -= movementVector3;
+        // }
+        // else
+        // {
+        //     previousSpeed = movementSpeed;
+        // }
+
+        if (movementSpeed == 0)
+            {
+                notificationPosition = new Vector3(0, 1.5f, Mathf.Min(distance, spawnDistance));
+                notificationRotation = Quaternion.Euler(0, 0, 0);
+            }
+            else
+            {
+                notificationPosition = GetNotificationSpawnPosition(referenceVector);
+                notificationRotation = GetNotificationSpawnRotation(referenceVector);
+            }
 
         currentObject = notification.SpawnObject(notificationPosition, notificationRotation, new Vector3(1, 1, 1));
 
@@ -181,11 +194,13 @@ public class SpawnNotification : MonoBehaviour
         {
             DistanceFromPreviousObject = GetUserDistance(),
             DistanceToSpawnObject = distanceToSpawnObject,
-            NotificationsRemaining = notifications.Count,
-            MovementVector = GetMovementVector(),
             UserPosition = userCamera.transform.position,
+            CurrentObjectPosition = currentObject != null ? currentObject.transform.position : new Vector3(0, 0, 0),
+            PreviousObjectPosition = previousObject != null ? previousObject.transform.position : new Vector3(0, 0, 0),
+            MovementVector = GetMovementVector(),
             NotificationPosition = notificationPosition,
-            NotificationRotation = notificationRotation
+            NotificationRotation = notificationRotation,
+            NotificationsRemaining = notifications.Count,
         }.ToString());
 
         userInitialPosition = new Vector2(userCamera.transform.position.x, userCamera.transform.position.z);
@@ -266,11 +281,6 @@ public class SpawnNotification : MonoBehaviour
         //If the notification list is not empty.
         if (notifications.Count > 0)
         {
-            //Get the last notification.
-            (Notification, float) notificationData = notifications[notifications.Count - 1];
-            Notification notification = notificationData.Item1;
-            float distance = notificationData.Item2;
-
             //If the user is in range of the notification.
             if (GetUserDistance() >= distanceToSpawnObject)
             {
@@ -290,7 +300,9 @@ public class SpawnNotification : MonoBehaviour
             {
                 DistanceFromPreviousObject = GetUserDistance(),
                 DistanceToSpawnObject = distanceToSpawnObject,
-                UserPosition = userCamera.transform.position
+                UserPosition = userCamera.transform.position,
+                CurrentObjectPosition = currentObject != null ? currentObject.transform.position : new Vector3(0, 0, 0),
+                PreviousObjectPosition = previousObject != null ? previousObject.transform.position : new Vector3(0, 0, 0),
             }.ToString());
         }
 
@@ -315,7 +327,7 @@ public class SpawnNotification : MonoBehaviour
         _gameObjectSpawnTimeExporter = new CsvExporter(gameObjectSpawnTimeFilePath, exportInterval, csvHeaderNotification);
 
         var debugDataFilePath = Application.persistentDataPath + $"/{exportDebugFileName} _{timeStamp}.csv";
-        const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),User position,Movement vector,Notification position, Notification rotation,Notifications remaining";
+        const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),User position,Current object position,Previous object position,Movement vector,Notification position, Notification rotation,Notifications remaining";
         _debugExporter = new CsvExporter(debugDataFilePath, exportInterval, csvHeaderDebug);
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
@@ -349,6 +361,8 @@ internal record DebugStepDatum
     public float DistanceFromPreviousObject;
     public float DistanceToSpawnObject;
     public Vector3 UserPosition;
+    public Vector3 CurrentObjectPosition;
+    public Vector3 PreviousObjectPosition;
 
 
     private string Vector3ToCSV(Vector3 vector)
@@ -358,7 +372,7 @@ internal record DebugStepDatum
 
     public override string ToString()
     {
-        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)}";
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(CurrentObjectPosition)},{Vector3ToCSV(PreviousObjectPosition)}";
     }
 }
 
@@ -368,6 +382,8 @@ internal record DebugNotificationDatum
     public float DistanceFromPreviousObject;
     public float DistanceToSpawnObject;
     public Vector3 UserPosition;
+    public Vector3 CurrentObjectPosition;
+    public Vector3 PreviousObjectPosition;
     public Vector3 MovementVector;
     public Vector3 NotificationPosition;
     public Quaternion NotificationRotation;
@@ -386,6 +402,6 @@ internal record DebugNotificationDatum
 
     public override string ToString()
     {
-        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(MovementVector)},{Vector3ToCSV(NotificationPosition)},{QuaternionToCSV(NotificationRotation)},{NotificationsRemaining}";
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(CurrentObjectPosition)},{Vector3ToCSV(PreviousObjectPosition)},{Vector3ToCSV(MovementVector)},{Vector3ToCSV(NotificationPosition)},{QuaternionToCSV(NotificationRotation)},{NotificationsRemaining}";
     }
 }
