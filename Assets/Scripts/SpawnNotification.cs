@@ -18,7 +18,7 @@ public class SpawnNotification : MonoBehaviour
     private AudioManager audioManager;
     private float distanceToSpawnObject;
     private float initialLeftOverDistance;
-    private Vector2 userInitialPosition;
+    private Vector3 userInitialPosition;
     private float previousSpeed;
     private GameObject currentObject;
     private GameObject previousObject;
@@ -108,7 +108,7 @@ public class SpawnNotification : MonoBehaviour
     {
         //x and z coordinates for Vector3, x and y coordinates for Vector2
         Vector2 displacementVector = new Vector2(userCamera.transform.position.x - userInitialPosition.x,
-                                                 userCamera.transform.position.z - userInitialPosition.y);
+                                                 userCamera.transform.position.z - userInitialPosition.z);
         return displacementVector.magnitude;
     }
 
@@ -154,22 +154,11 @@ public class SpawnNotification : MonoBehaviour
         Destroy(previousObject);
         previousObject = currentObject;
 
-        Vector3 movementVector3 = GetMovementVector();
-        Vector2 movementVector2 = GetVector2(movementVector3);
+        Vector2 movementVector2 = GetVector2(GetMovementVector());
         float movementSpeed = movementVector2.magnitude;
         Vector2 referenceVector = UnitVector2(movementVector2);
         Vector3 notificationPosition;
         Quaternion notificationRotation;
-
-        // //Detect teleportation.
-        // if (movementSpeed > previousSpeed * 10)
-        // {
-        //     userCamera.transform.position -= movementVector3;
-        // }
-        // else
-        // {
-        //     previousSpeed = movementSpeed;
-        // }
 
         if (movementSpeed == 0)
             {
@@ -203,7 +192,7 @@ public class SpawnNotification : MonoBehaviour
             NotificationsRemaining = notifications.Count,
         }.ToString());
 
-        userInitialPosition = new Vector2(userCamera.transform.position.x, userCamera.transform.position.z);
+        userInitialPosition = new Vector3(userCamera.transform.position.x, userCamera.transform.position.y, userCamera.transform.position.z);
 
         audioManager.OnNotificationSpawn(notification);
     }
@@ -229,6 +218,18 @@ public class SpawnNotification : MonoBehaviour
                 initialLeftOverDistance = 0;
             }
         }
+    }
+
+
+    private void SimulateTeleport()
+    {
+        Vector3 randomPosition = new Vector3(
+            UnityEngine.Random.Range(-400, 400),
+            0,
+            UnityEngine.Random.Range(-400, 400)
+        );
+
+        userCamera.transform.position = randomPosition;
     }
 
 
@@ -278,6 +279,27 @@ public class SpawnNotification : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // //Simulate teleport.
+        // if (Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     SimulateTeleport();
+        // }
+
+        //Detect teleportation.
+        Vector3 movementVector3 = GetMovementVector();
+        Vector2 movementVector2 = GetVector2(movementVector3);
+        float movementSpeed = movementVector2.magnitude;
+        if ((movementSpeed > previousSpeed * 10 && previousSpeed > 0) || (movementSpeed > 1 && previousSpeed == 0))
+        {
+            userInitialPosition += movementVector3;
+            if (previousObject != null) { previousObject.transform.position += movementVector3; }
+            if (currentObject != null) { currentObject.transform.position += movementVector3; }
+        }
+        else
+        {
+            previousSpeed = movementSpeed;
+        }
+
         //If the notification list is not empty.
         if (notifications.Count > 0)
         {
