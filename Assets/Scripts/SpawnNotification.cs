@@ -25,7 +25,7 @@ public class SpawnNotification : MonoBehaviour
     private Vector3 userPositionTracker;
     private CsvExporter _gameObjectSpawnTimeExporter;
     private CsvExporter _debugExporter;
-    private CsvExporter _speedometerExporter;
+    //private CsvExporter _speedometerExporter;
     private float debugWriteTimer = 0f;
     private float debugWriteDuration = 1f;
 
@@ -33,7 +33,7 @@ public class SpawnNotification : MonoBehaviour
     [SerializeField]
     private string exportNotificationFileName = "notification-spawn-time";
     private string exportDebugFileName = "debug-data";
-    private string exportSpeedometerFileName = "debug-data";
+    //private string exportSpeedometerFileName = "speedometer";
 
     [SerializeField] private float exportInterval = 1f;
 
@@ -292,7 +292,7 @@ public class SpawnNotification : MonoBehaviour
         Vector2 movementVector2 = GetVector2(movementVector3);
         float movementSpeed = movementVector2.magnitude;
         bool teleported = false;
-        if ((movementSpeed > previousSpeed * 10 && previousSpeed > 0) || (movementSpeed > 1 && previousSpeed == 0))
+        if ((movementSpeed > Mathf.Max(previousSpeed, 0.1f) * 10 && previousSpeed > 0) || (movementSpeed > 1 && previousSpeed == 0))
         {
             userInitialPosition += movementVector3;
             if (previousObject != null) { previousObject.transform.position += movementVector3; }
@@ -304,12 +304,15 @@ public class SpawnNotification : MonoBehaviour
             previousSpeed = movementSpeed;
         }
 
+        /*
         _speedometerExporter.AddData(new SpeedometerDatum
         {
             MovementSpeed = movementSpeed,
+            PreviousSpeed = previousSpeed,
             UserPosition = userCamera.transform.position,
             Teleported = teleported
         }.ToString());
+        */
 
         //If the notification list is not empty.
         if (notifications.Count > 0)
@@ -342,7 +345,7 @@ public class SpawnNotification : MonoBehaviour
         //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
         _debugExporter.ExportRecentData();
-        _speedometerExporter.ExportRecentData();
+        //_speedometerExporter.ExportRecentData();
         
         //Update user position tracker for getting movement vector.
         Vector3 userPosition = userCamera.transform.position;
@@ -364,13 +367,13 @@ public class SpawnNotification : MonoBehaviour
         const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),User position,Current object position,Previous object position,Movement vector,Notification position, Notification rotation,Notifications remaining";
         _debugExporter = new CsvExporter(debugDataFilePath, exportInterval, csvHeaderDebug);
 
-        var speedometerPath = Application.persistentDataPath + $"/{exportSpeedometerFileName} _{timeStamp}.csv";
-        const string csvHeaderSpeedometer = "Movement speed (m/frame),Movement speed (m/s),User position,Teleported";
-        _speedometerExporter = new CsvExporter(speedometerPath, exportInterval, csvHeaderSpeedometer);
+        //var speedometerPath = Application.persistentDataPath + $"/{exportSpeedometerFileName} _{timeStamp}.csv";
+        //const string csvHeaderSpeedometer = "Movement speed (m/frame),Movement speed (m/s),User position,Teleported";
+        //_speedometerExporter = new CsvExporter(speedometerPath, exportInterval, csvHeaderSpeedometer);
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
         Debug.Log($"Exporting debug data to {debugDataFilePath}");
-        Debug.Log($"Exporting speedometer data to {speedometerPath}");
+        //Debug.Log($"Exporting speedometer data to {speedometerPath}");
     }
     
 
@@ -449,6 +452,7 @@ internal record DebugNotificationDatum
 internal record SpeedometerDatum
 {
     public float MovementSpeed;
+    public float PreviousSpeed;
     public Vector3 UserPosition;
     public bool Teleported;
 
@@ -459,6 +463,6 @@ internal record SpeedometerDatum
 
     public override string ToString()
     {
-        return $"{MovementSpeed},{MovementSpeed / Time.deltaTime},{Vector3ToCSV(UserPosition)},{Teleported}";
+        return $"{MovementSpeed},{MovementSpeed / Time.deltaTime},{PreviousSpeed},{PreviousSpeed / Time.deltaTime},{Vector3ToCSV(UserPosition)},{Teleported}";
     }
 }

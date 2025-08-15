@@ -321,13 +321,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   notificationListIndex: 0
   spawnDistance: 20
-  passDistance: 10
   notificationControl: {fileID: 1163151096}
   userCamera: {fileID: 777067287}
   signObject: {fileID: 7004894785395504756, guid: 60426f2fe3aaebc498936f41f8ecf827, type: 3}
   signMaterial: {fileID: 2100000, guid: 814114abfa8d90548b4eab37b547e9ef, type: 2}
   audioControl: {fileID: 1946270334}
-  exportFileName: notification-spawn-time
+  exportNotificationFileName: notification-spawn-time
   exportInterval: 1
 --- !u!1 &1173149483
 GameObject:
@@ -562,7 +561,7 @@ MonoBehaviour:
   audioSource: {fileID: 1946270337}
   timeBetweenAudio: 10
   timeBetweenNotificationAndAudio: 5
-  audioProbability: 0.15
+  audioProbability: 0
 --- !u!4 &1946270336
 Transform:
   m_ObjectHideFlags: 0
