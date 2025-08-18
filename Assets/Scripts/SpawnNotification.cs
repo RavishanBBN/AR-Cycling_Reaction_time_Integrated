@@ -344,7 +344,7 @@ public class SpawnNotification : MonoBehaviour
         //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
         _debugExporter.ExportRecentData();
-        //_speedometerExporter.ExportRecentData();
+        _speedometerExporter.ExportRecentData();
         
         //Update user position tracker for getting movement vector.
         Vector3 userPosition = userCamera.transform.position;
