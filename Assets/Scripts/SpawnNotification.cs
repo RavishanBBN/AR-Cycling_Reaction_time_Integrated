@@ -19,13 +19,13 @@ public class SpawnNotification : MonoBehaviour
     private float distanceToSpawnObject;
     private float initialLeftOverDistance;
     private Vector3 userInitialPosition;
-    private float previousSpeed;
+    private float previousSpeedNormalised;
     private GameObject currentObject;
     private GameObject previousObject;
     private Vector3 userPositionTracker;
     private CsvExporter _gameObjectSpawnTimeExporter;
     private CsvExporter _debugExporter;
-    //private CsvExporter _speedometerExporter;
+    private CsvExporter _speedometerExporter;
     private float debugWriteTimer = 0f;
     private float debugWriteDuration = 1f;
 
@@ -33,7 +33,7 @@ public class SpawnNotification : MonoBehaviour
     [SerializeField]
     private string exportNotificationFileName = "notification-spawn-time";
     private string exportDebugFileName = "debug-data";
-    //private string exportSpeedometerFileName = "speedometer";
+    private string exportSpeedometerFileName = "speedometer";
 
     [SerializeField] private float exportInterval = 1f;
 
@@ -281,18 +281,19 @@ public class SpawnNotification : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // //Simulate teleport.
-        // if (Input.GetKeyDown(KeyCode.Space))
-        // {
-        //     SimulateTeleport();
-        // }
+        //Simulate teleport.
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            SimulateTeleport();
+        }
 
         //Detect teleportation.
         Vector3 movementVector3 = GetMovementVector();
         Vector2 movementVector2 = GetVector2(movementVector3);
         float movementSpeed = movementVector2.magnitude;
+        float movementSpeedNormalised = movementSpeed / Time.deltaTime;
         bool teleported = false;
-        if ((movementSpeed > Mathf.Max(previousSpeed, 0.1f) * 10 && previousSpeed > 0) || (movementSpeed > 1 && previousSpeed == 0))
+        if ((movementSpeedNormalised > Mathf.Max(previousSpeedNormalised, 2.5f) * 10 && previousSpeedNormalised > 0) || (movementSpeedNormalised > 100 && previousSpeedNormalised == 0))
         {
             userInitialPosition += movementVector3;
             if (previousObject != null) { previousObject.transform.position += movementVector3; }
@@ -301,18 +302,16 @@ public class SpawnNotification : MonoBehaviour
         }
         else
         {
-            previousSpeed = movementSpeed;
+            previousSpeedNormalised = movementSpeedNormalised;
         }
 
-        /*
         _speedometerExporter.AddData(new SpeedometerDatum
         {
             MovementSpeed = movementSpeed,
-            PreviousSpeed = previousSpeed,
+            PreviousSpeed = previousSpeedNormalised,
             UserPosition = userCamera.transform.position,
             Teleported = teleported
         }.ToString());
-        */
 
         //If the notification list is not empty.
         if (notifications.Count > 0)
@@ -367,13 +366,13 @@ public class SpawnNotification : MonoBehaviour
         const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),User position,Current object position,Previous object position,Movement vector,Notification position, Notification rotation,Notifications remaining";
         _debugExporter = new CsvExporter(debugDataFilePath, exportInterval, csvHeaderDebug);
 
-        //var speedometerPath = Application.persistentDataPath + $"/{exportSpeedometerFileName} _{timeStamp}.csv";
-        //const string csvHeaderSpeedometer = "Movement speed (m/frame),Movement speed (m/s),User position,Teleported";
-        //_speedometerExporter = new CsvExporter(speedometerPath, exportInterval, csvHeaderSpeedometer);
+        var speedometerPath = Application.persistentDataPath + $"/{exportSpeedometerFileName} _{timeStamp}.csv";
+        const string csvHeaderSpeedometer = "Movement speed (m/frame),Movement speed (m/s),User position,Teleported";
+        _speedometerExporter = new CsvExporter(speedometerPath, exportInterval, csvHeaderSpeedometer);
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
         Debug.Log($"Exporting debug data to {debugDataFilePath}");
-        //Debug.Log($"Exporting speedometer data to {speedometerPath}");
+        Debug.Log($"Exporting speedometer data to {speedometerPath}");
     }
     
 
