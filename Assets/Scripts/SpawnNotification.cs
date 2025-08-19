@@ -281,11 +281,11 @@ public class SpawnNotification : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Simulate teleport.
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            SimulateTeleport();
-        }
+        // //Simulate teleport.
+        // if (Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     SimulateTeleport();
+        // }
 
         //Detect teleportation.
         Vector3 movementVector3 = GetMovementVector();
@@ -344,7 +344,7 @@ public class SpawnNotification : MonoBehaviour
         //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
         _debugExporter.ExportRecentData();
-        _speedometerExporter.ExportRecentData();
+        // _speedometerExporter.ExportRecentData();
         
         //Update user position tracker for getting movement vector.
         Vector3 userPosition = userCamera.transform.position;
