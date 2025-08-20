@@ -13,9 +13,10 @@ public class Model : Notification
 
 
     //METHODS
-    public Model(bool _playAudio, GameObject _model, Vector3 _modelScale, float _spinningPeriod, RuntimeAnimatorController _animatorController)
+    public Model(bool _playAudio, SpawnPosition _spawnPosition, GameObject _model, Vector3 _modelScale, float _spinningPeriod, RuntimeAnimatorController _animatorController)
     {
         playAudio = _playAudio;
+        spawnPosition = _spawnPosition;
         model = _model;
         modelScale = _modelScale;
         spinningPeriod = _spinningPeriod;
@@ -66,9 +67,9 @@ public class Model : Notification
 
     public override GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
-        GameObject modelObject = Instantiate(model, position, rotation);
+        GameObject modelObject = Instantiate(model, position + spawnPosition.GetPosition(), rotation * spawnPosition.GetRotation());
         Vector3 totalScale = new Vector3(modelScale.x * localScale.x, modelScale.y * localScale.y, modelScale.z * localScale.z);
-        modelObject.transform.localScale = totalScale;
+        modelObject.transform.localScale = GetLocalScale(totalScale);
         AddStatefulInteractable(modelObject);
         AddCollider(modelObject);
         AddAnimation(modelObject);

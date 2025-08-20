@@ -25,7 +25,7 @@ public class SpawnNotification : MonoBehaviour
     private Vector3 userPositionTracker;
     private CsvExporter _gameObjectSpawnTimeExporter;
     private CsvExporter _debugExporter;
-    private CsvExporter _speedometerExporter;
+    // private CsvExporter _speedometerExporter;
     private float debugWriteTimer = 0f;
     private float debugWriteDuration = 1f;
 
@@ -33,25 +33,28 @@ public class SpawnNotification : MonoBehaviour
     [SerializeField]
     private string exportNotificationFileName = "notification-spawn-time";
     private string exportDebugFileName = "debug-data";
-    private string exportSpeedometerFileName = "speedometer";
+    // private string exportSpeedometerFileName = "speedometer";
 
     [SerializeField] private float exportInterval = 1f;
+
+    private SpawnPosition leftPosition = new SpawnPosition(new Vector3(-1.5f, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+    private SpawnPosition topPosition = new SpawnPosition(new Vector3(0, 3, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
 
 
 
     //METHODS
-    public Sprite CreateSprite(bool playAudio, string textureLocation)
+    public Sprite CreateSprite(bool playAudio, SpawnPosition spawnPosition, string textureLocation)
     {
         Texture texture = Resources.Load<Texture>(textureLocation);
-        return new Sprite(playAudio, texture, signObject, signMaterial);
+        return new Sprite(playAudio, spawnPosition, texture, signObject, signMaterial);
     }
 
 
-    public Model CreateModel(bool playAudio, string modelLocation, Vector3 modelScale, float spinningPeriod, string animatorLocation = null)
+    public Model CreateModel(bool playAudio, SpawnPosition spawnPosition, string modelLocation, Vector3 modelScale, float spinningPeriod, string animatorLocation = null)
     {
         GameObject model = Resources.Load<GameObject>(modelLocation);
         RuntimeAnimatorController animator = Resources.Load<RuntimeAnimatorController>(animatorLocation);
-        return new Model(playAudio, model, modelScale, spinningPeriod, animator);
+        return new Model(playAudio, spawnPosition, model, modelScale, spinningPeriod, animator);
     }
 
 
@@ -78,7 +81,7 @@ public class SpawnNotification : MonoBehaviour
         return new Vector2(vector.x, vector.z);
     }
 
-    
+
     private Vector3 GetMovementVector()
     {
         Vector3 userPosition = userCamera.transform.position;
@@ -163,15 +166,15 @@ public class SpawnNotification : MonoBehaviour
         Quaternion notificationRotation;
 
         if (movementSpeed == 0)
-            {
-                notificationPosition = new Vector3(0, 1.5f, Mathf.Min(distance, spawnDistance));
-                notificationRotation = Quaternion.Euler(0, 0, 0);
-            }
-            else
-            {
-                notificationPosition = GetNotificationSpawnPosition(referenceVector);
-                notificationRotation = GetNotificationSpawnRotation(referenceVector);
-            }
+        {
+            notificationPosition = new Vector3(0, 1.5f, Mathf.Min(distance, spawnDistance));
+            notificationRotation = Quaternion.Euler(0, 0, 0);
+        }
+        else
+        {
+            notificationPosition = GetNotificationSpawnPosition(referenceVector);
+            notificationRotation = GetNotificationSpawnRotation(referenceVector);
+        }
 
         currentObject = notification.SpawnObject(notificationPosition, notificationRotation, new Vector3(1, 1, 1));
 
@@ -244,19 +247,19 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<(Notification, float)>
             {
-                (CreateModel(true, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
-                (CreateSprite(true, "SignImages/40_zone"), 65),
-                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 195),
-                (CreateSprite(true, "SignImages/give_way"), 32),
-                (CreateModel(true, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 100),
-                (CreateSprite(true, "SignImages/keep_left"), 145),
-                (CreateModel(true, "Models/WoodenSpinningTop/WoodenSpinningTop", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 43),
-                (CreateSprite(true, "SignImages/100_kmh"), 128),
-                (CreateModel(true, "Models/Bicycle/Bicycle", new Vector3(30, 30, 30), 5), 108),
-                (CreateSprite(true, "SignImages/traffic_lights"), 86),
-                (CreateModel(true, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 163),
-                (CreateSprite(true, "SignImages/40_zone"), 138),
-                (CreateModel(true, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 155),
+                (CreateModel(true, leftPosition, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
+                (CreateSprite(true, leftPosition, "SignImages/40_zone"), 65),
+                (CreateModel(true, leftPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 195),
+                (CreateSprite(true, leftPosition, "SignImages/give_way"), 32),
+                (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 100),
+                (CreateSprite(true, leftPosition, "SignImages/keep_left"), 145),
+                (CreateModel(true, topPosition, "Models/WoodenSpinningTop/WoodenSpinningTop", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 43),
+                (CreateSprite(true, topPosition, "SignImages/100_kmh"), 128),
+                (CreateModel(true, topPosition, "Models/Bicycle/Bicycle", new Vector3(30, 30, 30), 5), 108),
+                (CreateSprite(true, topPosition, "SignImages/traffic_lights"), 86),
+                (CreateModel(true, topPosition, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 163),
+                (CreateSprite(true, topPosition, "SignImages/40_zone"), 138),
+                (CreateModel(true, topPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 155),
             }
         };
 
@@ -292,26 +295,26 @@ public class SpawnNotification : MonoBehaviour
         Vector2 movementVector2 = GetVector2(movementVector3);
         float movementSpeed = movementVector2.magnitude;
         float movementSpeedNormalised = movementSpeed / Time.deltaTime;
-        bool teleported = false;
+        // bool teleported = false;
         if ((movementSpeedNormalised > Mathf.Max(previousSpeedNormalised, 2.5f) * 10 && previousSpeedNormalised > 0) || (movementSpeedNormalised > 100 && previousSpeedNormalised == 0))
         {
             userInitialPosition += movementVector3;
             if (previousObject != null) { previousObject.transform.position += movementVector3; }
             if (currentObject != null) { currentObject.transform.position += movementVector3; }
-            teleported = true;
+            // teleported = true;
         }
         else
         {
             previousSpeedNormalised = movementSpeedNormalised;
         }
 
-        _speedometerExporter.AddData(new SpeedometerDatum
-        {
-            MovementSpeed = movementSpeed,
-            PreviousSpeed = previousSpeedNormalised,
-            UserPosition = userCamera.transform.position,
-            Teleported = teleported
-        }.ToString());
+        // _speedometerExporter.AddData(new SpeedometerDatum
+        // {
+        //     MovementSpeed = movementSpeed,
+        //     PreviousSpeed = previousSpeedNormalised,
+        //     UserPosition = userCamera.transform.position,
+        //     Teleported = teleported
+        // }.ToString());
 
         //If the notification list is not empty.
         if (notifications.Count > 0)
@@ -345,7 +348,7 @@ public class SpawnNotification : MonoBehaviour
         _gameObjectSpawnTimeExporter.ExportRecentData();
         _debugExporter.ExportRecentData();
         // _speedometerExporter.ExportRecentData();
-        
+
         //Update user position tracker for getting movement vector.
         Vector3 userPosition = userCamera.transform.position;
         userPositionTracker.x = userPosition.x;
@@ -366,15 +369,15 @@ public class SpawnNotification : MonoBehaviour
         const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),User position,Current object position,Previous object position,Movement vector,Notification position, Notification rotation,Notifications remaining";
         _debugExporter = new CsvExporter(debugDataFilePath, exportInterval, csvHeaderDebug);
 
-        var speedometerPath = Application.persistentDataPath + $"/{exportSpeedometerFileName} _{timeStamp}.csv";
-        const string csvHeaderSpeedometer = "Movement speed (m/frame),Movement speed (m/s),User position,Teleported";
-        _speedometerExporter = new CsvExporter(speedometerPath, exportInterval, csvHeaderSpeedometer);
+        // var speedometerPath = Application.persistentDataPath + $"/{exportSpeedometerFileName} _{timeStamp}.csv";
+        // const string csvHeaderSpeedometer = "Movement speed (m/frame),Movement speed (m/s),User position,Teleported";
+        // _speedometerExporter = new CsvExporter(speedometerPath, exportInterval, csvHeaderSpeedometer);
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
         Debug.Log($"Exporting debug data to {debugDataFilePath}");
-        Debug.Log($"Exporting speedometer data to {speedometerPath}");
+        // Debug.Log($"Exporting speedometer data to {speedometerPath}");
     }
-    
+
 
     private void OnDestroy()
     {

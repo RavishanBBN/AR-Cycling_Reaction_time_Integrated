@@ -11,9 +11,10 @@ public class Sprite : Notification
 
 
     //METHODS
-    public Sprite(bool _playAudio, Texture _texture, GameObject _signObject, Material _signMaterial)
+    public Sprite(bool _playAudio, SpawnPosition _spawnPosition, Texture _texture, GameObject _signObject, Material _signMaterial)
     {
         playAudio = _playAudio;
+        spawnPosition = _spawnPosition;
         texture = _texture;
         signObject = _signObject;
         signMaterial = _signMaterial;
@@ -22,8 +23,8 @@ public class Sprite : Notification
 
     public override GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
-        GameObject spriteObject = Instantiate(signObject, position, rotation);
-        spriteObject.transform.localScale = localScale;
+        GameObject spriteObject = Instantiate(signObject, position + spawnPosition.GetPosition(), rotation * spawnPosition.GetRotation());
+        spriteObject.transform.localScale = GetLocalScale(localScale);
         signMaterial.mainTexture = texture;
 
         MeshRenderer imageMeshRenderer = spriteObject.GetComponent<MeshRenderer>();
