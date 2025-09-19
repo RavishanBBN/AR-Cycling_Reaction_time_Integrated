@@ -248,19 +248,33 @@ public class SpawnNotification : MonoBehaviour
             new List<(Notification, float)>
             {
                 (CreateModel(true, leftPosition, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
-                (CreateSprite(true, leftPosition, "SignImages/40_zone"), 65),
-                (CreateModel(true, leftPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 195),
-                (CreateSprite(true, leftPosition, "SignImages/give_way"), 32),
-                (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 100),
-                (CreateSprite(true, leftPosition, "SignImages/keep_left"), 145),
-                (CreateModel(true, topPosition, "Models/WoodenSpinningTop/WoodenSpinningTop", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 43),
-                (CreateSprite(true, topPosition, "SignImages/100_kmh"), 128),
-                (CreateModel(true, topPosition, "Models/Bicycle/Bicycle", new Vector3(30, 30, 30), 5), 108),
-                (CreateSprite(true, topPosition, "SignImages/traffic_lights"), 86),
-                (CreateModel(true, topPosition, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 163),
-                (CreateSprite(true, topPosition, "SignImages/40_zone"), 138),
-                (CreateModel(true, topPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 155),
+                (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 65),
+                (CreateSprite(true, topPosition, "SignImages/dangerous_intersection"), 195),
+                (CreateModel(true, leftPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 32),
+                (CreateSprite(true, leftPosition, "SignImages/school_of_biological_science"), 100),
+                (CreateModel(true, topPosition, "Models/WoodenSpinningTop/WoodenSpinningTop", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 145),
+                (CreateSprite(true, leftPosition, "SignImages/bus_loop"), 181),
+                (CreateSprite(true, leftPosition, "SignImages/watch_for_pedestrians"), 108),
+                (CreateModel(true, leftPosition, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 86),
+                (CreateSprite(true, leftPosition, "SignImages/library"), 163),
+                (CreateSprite(true, leftPosition, "SignImages/40_zone"), 138),
+                (CreateSprite(true, leftPosition, "SignImages/give_way"), 155),
             }
+
+            /*
+            5 - Maccas
+            65 - Toilet
+            195 - Dangerous intersection
+            32 - Cafe
+            100 - School of biological science
+            145 - Spinning top
+            181 - Monash bus loop
+            108 - Watch for pedestrian
+            86 - Maccas
+            163 - Library
+            138 - 40 zone
+            155 - Give way
+            */
         };
 
         notifications = notificationLists[notificationListIndex];
