@@ -38,7 +38,7 @@ public class SpawnNotification : MonoBehaviour
     [SerializeField] private float exportInterval = 1f;
 
     private SpawnPosition leftPosition = new SpawnPosition(new Vector3(-1.5f, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
-    private SpawnPosition topPosition = new SpawnPosition(new Vector3(0, 3, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+    private SpawnPosition topPosition = new SpawnPosition(new Vector3(0, 2.5f, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
 
 
 
@@ -247,17 +247,17 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<(Notification, float)>
             {
-                (CreateModel(true, leftPosition, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 5),
+                (CreateModel(true, leftPosition, "Models/waterfountain/WaterFountain", new Vector3(50, 50, 50), 5), 5),
                 (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 65),
                 (CreateSprite(true, topPosition, "SignImages/dangerous_intersection"), 195),
                 (CreateModel(true, leftPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 32),
                 (CreateSprite(true, leftPosition, "SignImages/school_of_biological_science"), 100),
-                (CreateModel(true, topPosition, "Models/WoodenSpinningTop/WoodenSpinningTop", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 145),
+                (CreateModel(true, topPosition, "Models/waterfountain/WaterFountain", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 145),
                 (CreateSprite(true, leftPosition, "SignImages/bus_loop"), 181),
                 (CreateSprite(true, leftPosition, "SignImages/watch_for_pedestrians"), 108),
-                (CreateModel(true, leftPosition, "Models/MacDonalds/MacDonalds", new Vector3(50, 50, 50), 5), 86),
+                (CreateModel(true, leftPosition, "Models/Sushi/almonroe", new Vector3(50, 50, 50), 5), 86),
                 (CreateSprite(true, leftPosition, "SignImages/library"), 163),
-                (CreateSprite(true, leftPosition, "SignImages/40_zone"), 138),
+                (CreateSprite(true, topPosition, "Models/Donut/donut"), 138),
                 (CreateSprite(true, leftPosition, "SignImages/give_way"), 155),
             }
 

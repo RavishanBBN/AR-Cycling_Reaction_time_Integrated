@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f474740c0b4c8e0499ce0005393c8707
+guid: 642c340ac2844334bb2569360bd99f20
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,7 +7,7 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: material_0
+      name: Buttons
     second: {fileID: 2100000, guid: 802b1884f9fc94b49860f1b8900d5e1b, type: 2}
   materials:
     materialImportMode: 2
