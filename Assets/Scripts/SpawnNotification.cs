@@ -38,7 +38,7 @@ public class SpawnNotification : MonoBehaviour
     [SerializeField] private float exportInterval = 1f;
 
     private SpawnPosition leftPosition = new SpawnPosition(new Vector3(-1.5f, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
-    private SpawnPosition topPosition = new SpawnPosition(new Vector3(0, 2.5f, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+    private SpawnPosition topPosition = new SpawnPosition(new Vector3(0, 2f, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
 
 
 
@@ -247,17 +247,17 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<(Notification, float)>
             {
-                (CreateModel(true, leftPosition, "Models/waterfountain/WaterFountain", new Vector3(50, 50, 50), 5), 5),
+                (CreateModel(true, leftPosition, "Models/waterfountain/WaterFountain", new Vector3(20, 20, 20), 5), 5),
                 (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 65),
                 (CreateSprite(true, topPosition, "SignImages/dangerous_intersection"), 195),
-                (CreateModel(true, leftPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 32),
-                (CreateSprite(true, leftPosition, "SignImages/school_of_biological_science"), 100),
-                (CreateModel(true, topPosition, "Models/waterfountain/WaterFountain", new Vector3(1, 1, 1), 5, "Models/WoodenSpinningTop/WoodenSpinningTopAnimatorController"), 145),
+                (CreateModel(true, leftPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 47),
+                (CreateSprite(true, topPosition, "SignImages/school_of_biological_science"), 85),
+                (CreateModel(true, leftPosition, "Models/waterfountain/WaterFountain", new Vector3(20, 20, 20), 5),  145),
                 (CreateSprite(true, leftPosition, "SignImages/bus_loop"), 181),
-                (CreateSprite(true, leftPosition, "SignImages/watch_for_pedestrians"), 108),
-                (CreateModel(true, leftPosition, "Models/Sushi/almonroe", new Vector3(50, 50, 50), 5), 86),
-                (CreateSprite(true, leftPosition, "SignImages/library"), 163),
-                (CreateSprite(true, topPosition, "Models/Donut/donut"), 138),
+                (CreateSprite(true, topPosition, "SignImages/watch_for_pedestrians"), 108),
+                (CreateModel(true, leftPosition, "Models/Sushi/salmonroe", new Vector3(15, 15, 15), 5), 106),
+                (CreateSprite(true, topPosition, "SignImages/library"), 143),
+                (CreateModel(true, leftPosition, "Models/Donut/donut", new Vector3(150, 150, 150), 5), 138),
                 (CreateSprite(true, leftPosition, "SignImages/give_way"), 155),
             }
 
@@ -265,14 +265,14 @@ public class SpawnNotification : MonoBehaviour
             5 - Maccas
             65 - Toilet
             195 - Dangerous intersection
-            32 - Cafe
-            100 - School of biological science
+            47 - Cafe   // 32m will appear when turn so adding 15m
+            85 - School of biological science
             145 - Spinning top
             181 - Monash bus loop
             108 - Watch for pedestrian
-            86 - Maccas
-            163 - Library
-            138 - 40 zone
+            106 - Maccas        /// adding 20m more
+            143 - Library
+            138 - donut
             155 - Give way
             */
         };
