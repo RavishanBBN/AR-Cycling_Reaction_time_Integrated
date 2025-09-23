@@ -24,5 +24,11 @@ public abstract class Notification : Object
     }
 
 
+    public float GetPositionXDisplacement()
+    {
+        return spawnPosition.GetXDisplacement();
+    }
+
+
     public abstract GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale);
 }

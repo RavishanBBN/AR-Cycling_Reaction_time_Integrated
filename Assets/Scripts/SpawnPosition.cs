@@ -24,6 +24,18 @@ public class SpawnPosition
     }
 
 
+    public float GetXDisplacement()
+    {
+        return position.x;
+    }
+
+
+    public Vector3 GetYDisplacementVector()
+    {
+        return new Vector3(0, position.y, 0);
+    }
+
+
     public Quaternion GetRotation()
     {
         return Quaternion.Euler(eulerRotation);

@@ -118,9 +118,9 @@ public class SpawnNotification : MonoBehaviour
     }
 
 
-    private Vector3 GetNotificationSpawnPosition(Vector2 referenceVector)
+    private Vector3 GetNotificationSpawnPosition(Notification notification, Vector2 referenceVector)
     {
-        Vector2 objectSpawnDisplacement = new Vector2(0, spawnDistance);
+        Vector2 objectSpawnDisplacement = new Vector2(notification.GetPositionXDisplacement(), spawnDistance);
         Vector2 relativeSpawnDisplacementUnit2 = GetRelativeVector(referenceVector, objectSpawnDisplacement);
         Vector3 relativeSpawnDisplacementUnit = new Vector3(relativeSpawnDisplacementUnit2.x, 0, relativeSpawnDisplacementUnit2.y);
         Vector3 relativeSpawnDisplacement = relativeSpawnDisplacementUnit * objectSpawnDisplacement.magnitude;
@@ -172,7 +172,7 @@ public class SpawnNotification : MonoBehaviour
         }
         else
         {
-            notificationPosition = GetNotificationSpawnPosition(referenceVector);
+            notificationPosition = GetNotificationSpawnPosition(notification, referenceVector);
             notificationRotation = GetNotificationSpawnRotation(referenceVector);
         }
 
