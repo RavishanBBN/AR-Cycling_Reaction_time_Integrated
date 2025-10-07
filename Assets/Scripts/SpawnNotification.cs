@@ -248,17 +248,17 @@ public class SpawnNotification : MonoBehaviour
             new List<(Notification, float)>
             {
                 (CreateModel(true, leftPosition, "Models/waterfountain/WaterFountain", new Vector3(20, 20, 20), 5), 5),
-                (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 65),
-                (CreateSprite(true, topPosition, "SignImages/dangerous_intersection"), 195),
-                (CreateModel(true, leftPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 47),
-                (CreateSprite(true, topPosition, "SignImages/school_of_biological_science"), 85),
-                (CreateModel(true, leftPosition, "Models/waterfountain/WaterFountain", new Vector3(20, 20, 20), 5),  145),
-                (CreateSprite(true, leftPosition, "SignImages/bus_loop"), 181),
-                (CreateSprite(true, topPosition, "SignImages/watch_for_pedestrians"), 108),
-                (CreateModel(true, leftPosition, "Models/Sushi/salmonroe", new Vector3(15, 15, 15), 5), 106),
-                (CreateSprite(true, topPosition, "SignImages/library"), 143),
-                (CreateModel(true, leftPosition, "Models/Donut/donut", new Vector3(150, 150, 150), 5), 138),
-                (CreateSprite(true, leftPosition, "SignImages/give_way"), 155),
+                (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 65), //ML1
+                (CreateSprite(true, topPosition, "SignImages/dangerous_intersection"), 195), //ST1
+                (CreateModel(true, topPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 47), //MT1
+                (CreateSprite(true, leftPosition, "SignImages/school_of_biological_science"), 85), //SL1
+                (CreateModel(true, topPosition, "Models/waterfountain/WaterFountain", new Vector3(20, 20, 20), 5),  135), //MT2
+                (CreateSprite(true, topPosition, "SignImages/bus_loop"), 181), //ST2
+                (CreateSprite(true, leftPosition, "SignImages/watch_for_pedestrians"), 108), //SL2
+                (CreateModel(true, leftPosition, "Models/Sushi/salmonroe", new Vector3(15, 15, 15), 5), 106), //ML2
+                (CreateSprite(true, topPosition, "SignImages/library"), 143), //ST3
+                (CreateModel(true, leftPosition, "Models/Donut/donut", new Vector3(150, 150, 150), 5), 138), //ML3
+                (CreateSprite(true, leftPosition, "SignImages/give_way"), 130), //SL3
             }
 
             /*
