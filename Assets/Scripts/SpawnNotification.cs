@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System;
 
 
+
 public class SpawnNotification : MonoBehaviour
 {
     //ATTRIBUTES
-    public List<List<Notification>> notificationLists;
-    private List<Notification> notifications;
+    private List<List<(Notification, float)>> notificationLists;
+    private List<(Notification, float)> notifications;
     public int notificationListIndex = 0;
     public float spawnDistance = 20;
     public GameObject notificationControl;
@@ -15,6 +16,12 @@ public class SpawnNotification : MonoBehaviour
     public GameObject signObject;
     public Material signMaterial;
     public AudioSource audioSource;
+    public GameObject audioControl;
+    private AudioManager audioManager;
+    private float distanceToSpawnObject;
+    private float initialLeftOverDistance;
+    private Vector3 userInitialPosition;
+    private float previousSpeedNormalised;
     public float timeBetweenAudio;
     public float timeBetweenNotificationAndAudio;
     public float audioProbability = 0.15f;
@@ -26,120 +33,313 @@ public class SpawnNotification : MonoBehaviour
     private GameObject currentObject;
     private GameObject previousObject;
     private List<GameObject> spawnedObjects;
+    private Vector3 userPositionTracker;
     private CsvExporter _gameObjectSpawnTimeExporter;
     [SerializeField] private MenuControl menuControl;
     [SerializeField] private float endingMenuDistance = 0f;
     private Vector3? lastNotificationPosition;
+    private CsvExporter _debugExporter;
+    // private CsvExporter _speedometerExporter;
+    private float debugWriteTimer = 0f;
+    private float debugWriteDuration = 1f;
 
     [Header("Export Settings")]
     [SerializeField]
-    private string exportFileName = "notification-spawn-time";
+    private string exportNotificationFileName = "notification-spawn-time";
+    private string exportDebugFileName = "debug-data";
+    // private string exportSpeedometerFileName = "speedometer";
 
     [SerializeField] private float exportInterval = 1f;
+
+    private SpawnPosition leftPosition = new SpawnPosition(new Vector3(-1.5f, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+    private SpawnPosition topPosition = new SpawnPosition(new Vector3(0, 2f, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1));
 
 
 
     //METHODS
-    public Sprite CreateSprite(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string textureLocation)
+    public Sprite CreateSprite(bool playAudio, SpawnPosition spawnPosition, string textureLocation)
     {
         Texture texture = Resources.Load<Texture>(textureLocation);
-        return new Sprite(position, eulerRotation, localScale, playAudio, texture, signObject, signMaterial);
+        return new Sprite(playAudio, spawnPosition, texture, signObject, signMaterial);
     }
 
 
-    public Model CreateModel(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string modelLocation, float spinningPeriod, string animatorLocation = null)
+    public Model CreateModel(bool playAudio, SpawnPosition spawnPosition, string modelLocation, Vector3 modelScale, float spinningPeriod, string animatorLocation = null)
     {
         GameObject model = Resources.Load<GameObject>(modelLocation);
         RuntimeAnimatorController animator = Resources.Load<RuntimeAnimatorController>(animatorLocation);
-        return new Model(position, eulerRotation, localScale, playAudio, model, spinningPeriod, animator);
+        return new Model(playAudio, spawnPosition, model, modelScale, spinningPeriod, animator);
     }
 
 
-    private void SpawnNotificationInstance(Notification notification)
+    private float DotProduct2(Vector2 a, Vector2 b)
     {
-        if (showAllNotifications)
+        return a.x * b.x + a.y * b.y;
+    }
+
+
+    private float CrossProduct2(Vector2 a, Vector2 b)
+    {
+        return a.x * b.y - a.y * b.x;
+    }
+
+
+    private Vector2 UnitVector2(Vector2 v)
+    {
+        return v / v.magnitude;
+    }
+
+
+    private Vector2 GetVector2(Vector3 vector)
+    {
+        return new Vector2(vector.x, vector.z);
+    }
+
+
+    private Vector3 GetMovementVector()
+    {
+        Vector3 userPosition = userCamera.transform.position;
+        Vector3 movementVector = new Vector3(userPosition.x - userPositionTracker.x, userPositionTracker.y - userPosition.y, userPosition.z - userPositionTracker.z);
+
+        return movementVector;
+    }
+
+
+    private Vector2 GetRelativeVector(Vector2 referenceVector, Vector2 relativeVector)
+    {
+        Vector2 forwardVector = new Vector2(0, 1);
+
+        Vector2 a = forwardVector; //Absolute forward
+        Vector2 b = relativeVector; //Absolute displacement
+        Vector2 c = referenceVector; //Relative forward
+
+        float dotProduct = DotProduct2(a, b);
+        float crossProduct = CrossProduct2(a, b);
+
+        return new Vector2(
+            dotProduct / (a.magnitude * b.magnitude) * c.x - crossProduct / (a.magnitude * b.magnitude) * c.y,
+            crossProduct / (a.magnitude * b.magnitude) * c.x + dotProduct / (a.magnitude * b.magnitude) * c.y
+        );
+    }
+
+
+    private float GetUserDistance()
+    {
+        //x and z coordinates for Vector3, x and y coordinates for Vector2
+        Vector2 displacementVector = new Vector2(userCamera.transform.position.x - userInitialPosition.x,
+                                                 userCamera.transform.position.z - userInitialPosition.z);
+        return displacementVector.magnitude;
+    }
+
+
+    private Vector3 GetNotificationSpawnPosition(Notification notification, Vector2 referenceVector)
+    {
+        Vector2 objectSpawnDisplacement = new Vector2(notification.GetPositionXDisplacement(), spawnDistance);
+        Vector2 relativeSpawnDisplacementUnit2 = GetRelativeVector(referenceVector, objectSpawnDisplacement);
+        Vector3 relativeSpawnDisplacementUnit = new Vector3(relativeSpawnDisplacementUnit2.x, 0, relativeSpawnDisplacementUnit2.y);
+        Vector3 relativeSpawnDisplacement = relativeSpawnDisplacementUnit * objectSpawnDisplacement.magnitude;
+
+        return userCamera.transform.position + relativeSpawnDisplacement;
+    }
+
+
+    private Quaternion GetNotificationSpawnRotation(Vector2 referenceVector)
+    {
+        Vector2 forwardVector = new Vector2(0, 1);
+        float rotation = Mathf.Atan2(
+            forwardVector.x * referenceVector.y - forwardVector.y * referenceVector.x,
+            forwardVector.x * referenceVector.x + forwardVector.y * referenceVector.y
+        ) * Mathf.Rad2Deg;
+        return Quaternion.Euler(0, -rotation, 0);
+    }
+
+
+    private float GetNextDistance()
+    {
+        if (notifications.Count > 0)
         {
-            GameObject notificationInstance = notification.SpawnObject();
-            spawnedObjects.Add(notificationInstance);
+            (Notification, float) newNotificationData = notifications[notifications.Count - 1];
+            return newNotificationData.Item2;
         }
         else
         {
-            Destroy(previousObject);
-            previousObject = currentObject;
-            currentObject = notification.SpawnObject();
-
-            if (notification.GetPlayAudio())
-            {
-                playAudio();
-            }
-
-            _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
-            {
-                TimeStamp = Time.time,
-                Object = currentObject.name
-            }.ToString());
-
-            timeBetweenNotificationAndAudioTimer = 0;
+            return Mathf.Infinity;
         }
     }
 
 
-    private void playAudio()
+    private void SpawnNotificationInstance(Notification notification, float distance)
     {
-        timeBetweenAudioTimer = 0;
-        audioSource.Play();
+        Destroy(previousObject);
+        previousObject = currentObject;
+
+        Vector2 movementVector2 = GetVector2(GetMovementVector());
+        float movementSpeed = movementVector2.magnitude;
+        Vector2 referenceVector = UnitVector2(movementVector2);
+        Vector3 notificationPosition;
+        Quaternion notificationRotation;
+
+        if (movementSpeed == 0)
+        {
+            notificationPosition = new Vector3(0, 1.5f, Mathf.Min(distance, spawnDistance));
+            notificationRotation = Quaternion.Euler(0, 0, 0);
+        }
+        else
+        {
+            notificationPosition = GetNotificationSpawnPosition(notification, referenceVector);
+            notificationRotation = GetNotificationSpawnRotation(referenceVector);
+        }
+
+        currentObject = notification.SpawnObject(notificationPosition, notificationRotation, new Vector3(1, 1, 1));
+
+        lastNotificationPosition = notificationPosition;
+
+        _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
+        {
+            TimeStamp = Time.time,
+            Object = currentObject.name
+        }.ToString());
+
+        timeBetweenNotificationAndAudioTimer = 0;
+    }
+
+
+
+    private void SpawnNextNotification()
+    {
+        if (notifications.Count > 0)
+        {
+            (Notification, float) notificationData = notifications[notifications.Count - 1];
+            Notification notification = notificationData.Item1;
+            float distance = notificationData.Item2;
+            SpawnNotificationInstance(notification, distance);
+            notifications.RemoveAt(notifications.Count - 1);
+            float nextDistance = GetNextDistance();
+            distanceToSpawnObject = nextDistance - initialLeftOverDistance;
+            if (nextDistance < initialLeftOverDistance)
+            {
+                initialLeftOverDistance -= nextDistance;
+            }
+            else
+            {
+                initialLeftOverDistance = 0;
+            }
+        }
+    }
+
+
+    private void SimulateTeleport()
+    {
+        Vector3 randomPosition = new Vector3(
+            UnityEngine.Random.Range(-400, 400),
+            0,
+            UnityEngine.Random.Range(-400, 400)
+        );
+
+        userCamera.transform.position = randomPosition;
     }
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        notificationLists = new List<List<Notification>>
+        audioManager = audioControl.GetComponent<AudioManager>();
+
+        notificationLists = new List<List<(Notification, float)>>
         {
-            new List<Notification>
+            new List<(Notification, float)>
             {
-                CreateModel(new Vector3(0, 1.5f, 5), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/MacDonalds/MacDonalds", 5),
-                CreateSprite(new Vector3(0, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
-                CreateModel(new Vector3(0, 1.5f, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
-                CreateSprite(new Vector3(0, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
-                CreateModel(new Vector3(0, 1.5f, 160), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Toilet/Toilet", 5),
+                (CreateModel(true, leftPosition, "Models/waterfountain/WaterFountain", new Vector3(20, 20, 20), 5), 5),
+                // (CreateModel(true, leftPosition, "Models/Toilet/Toilet", new Vector3(50, 50, 50), 5), 65), //ML1
+                // (CreateSprite(true, topPosition, "SignImages/dangerous_intersection"), 195), //ST1
+                // (CreateModel(true, topPosition, "Models/Cafe/Cafe", new Vector3(50, 50, 50), 5), 47), //MT1
+                // (CreateSprite(true, leftPosition, "SignImages/school_of_biological_science"), 85), //SL1
+                // (CreateModel(true, topPosition, "Models/waterfountain/WaterFountain", new Vector3(20, 20, 20), 5),  135), //MT2
+                // (CreateSprite(true, topPosition, "SignImages/bus_loop"), 181), //ST2
+                // (CreateSprite(true, leftPosition, "SignImages/watch_for_pedestrians"), 108), //SL2
+                // (CreateModel(true, leftPosition, "Models/Sushi/salmonroe", new Vector3(15, 15, 15), 5), 106), //ML2
+                // (CreateSprite(true, topPosition, "SignImages/library"), 143), //ST3
+                // (CreateModel(true, leftPosition, "Models/Donut/donut", new Vector3(150, 150, 150), 5), 138), //ML3
+                // (CreateSprite(true, leftPosition, "SignImages/give_way"), 130), //SL3
             }
+
+            /*
+            5 - Maccas
+            65 - Toilet
+            195 - Dangerous intersection
+            47 - Cafe   // 32m will appear when turn so adding 15m
+            85 - School of biological science
+            145 - Spinning top
+            181 - Monash bus loop
+            108 - Watch for pedestrian
+            106 - Maccas        /// adding 20m more
+            143 - Library
+            138 - donut
+            155 - Give way
+            */
         };
 
         notifications = notificationLists[notificationListIndex];
         notifications.Reverse(); //Reverse notification list items so that items are popped from the end (O(1) time as opposed to O(n)).
 
-        if (showAllNotifications)
-        {
-            spawnedObjects = new List<GameObject>();
-            foreach (Notification notification in notifications)
-            {
-                SpawnNotificationInstance(notification);
-            }
+        (Notification, float) firstNotificationData = notifications[notifications.Count - 1];
+        float firstNotificationDistance = firstNotificationData.Item2;
 
-            notifications.Clear();
+        if (firstNotificationDistance < spawnDistance)
+        {
+            initialLeftOverDistance = spawnDistance - firstNotificationDistance;
+            SpawnNextNotification();
+        }
+        else
+        {
+            distanceToSpawnObject = firstNotificationDistance;
         }
     }
+
 
 
     // Update is called once per frame
     void Update()
     {
+        // //Simulate teleport.
+        // if (Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     SimulateTeleport();
+        // }
+
+        //Detect teleportation.
+        Vector3 movementVector3 = GetMovementVector();
+        Vector2 movementVector2 = GetVector2(movementVector3);
+        float movementSpeed = movementVector2.magnitude;
+        float movementSpeedNormalised = movementSpeed / Time.deltaTime;
+        // bool teleported = false;
+        if ((movementSpeedNormalised > Mathf.Max(previousSpeedNormalised, 2.5f) * 10 && previousSpeedNormalised > 0) || (movementSpeedNormalised > 100 && previousSpeedNormalised == 0))
+        {
+            userInitialPosition += movementVector3;
+            if (previousObject != null) { previousObject.transform.position += movementVector3; }
+            if (currentObject != null) { currentObject.transform.position += movementVector3; }
+            // teleported = true;
+        }
+        else
+        {
+            previousSpeedNormalised = movementSpeedNormalised;
+        }
+
+        // _speedometerExporter.AddData(new SpeedometerDatum
+        // {
+        //     MovementSpeed = movementSpeed,
+        //     PreviousSpeed = previousSpeedNormalised,
+        //     UserPosition = userCamera.transform.position,
+        //     Teleported = teleported
+        // }.ToString());
+
         //If the notification list is not empty.
         if (notifications.Count > 0)
         {
-            //Get the last notification.
-            Notification notification = notifications[notifications.Count - 1];
-
             //If the user is in range of the notification.
-            if (notification.CheckSpawn(userCamera.transform.position, spawnDistance))
+            if (GetUserDistance() >= distanceToSpawnObject)
             {
-                //Spawn the notification.
-                SpawnNotificationInstance(notification);
-
-                //Pop the notification from the list (since the notification is at the end of the list, this is O(1) time).
-                lastNotificationPosition = notification.GetPosition();
-                notifications.RemoveAt(notifications.Count - 1);
+                SpawnNextNotification();
             }
         }
         else
@@ -158,39 +358,56 @@ public class SpawnNotification : MonoBehaviour
             }
         }
 
-        //Try playing random audio if applicable.
-        if (timeBetweenAudioTimer >= timeBetweenAudio && timeBetweenNotificationAndAudioTimer >= timeBetweenNotificationAndAudio)
+        //Step debug data.
+        if (debugWriteTimer < debugWriteDuration)
         {
-            rngCheckTimer += Time.deltaTime;
-
-            if (rngCheckTimer >= rngCheckDuration)
-            {
-                float rng = UnityEngine.Random.Range(0f, 1f);
-                if (rng < audioProbability)
-                {
-                    playAudio();
-                }
-                rngCheckTimer = 0f;
-            }
+            debugWriteTimer += Time.deltaTime;
         }
-        
-        //Increment audio timers.
-        timeBetweenAudioTimer += Time.deltaTime;
-        timeBetweenNotificationAndAudioTimer += Time.deltaTime;
+        else
+        {
+            debugWriteTimer = 0f;
+            _debugExporter.AddData(new DebugStepDatum
+            {
+                DistanceFromPreviousObject = GetUserDistance(),
+                DistanceToSpawnObject = distanceToSpawnObject,
+                UserPosition = userCamera.transform.position,
+                CurrentObjectPosition = currentObject != null ? currentObject.transform.position : new Vector3(0, 0, 0),
+                PreviousObjectPosition = previousObject != null ? previousObject.transform.position : new Vector3(0, 0, 0),
+            }.ToString());
+        }
 
         //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
+        _debugExporter.ExportRecentData();
+        // _speedometerExporter.ExportRecentData();
+
+        //Update user position tracker for getting movement vector.
+        Vector3 userPosition = userCamera.transform.position;
+        userPositionTracker.x = userPosition.x;
+        userPositionTracker.y = userPosition.y;
+        userPositionTracker.z = userPosition.z;
     }
 
 
     private void Awake()
     {
         var timeStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        var gameObjectSpawnTimeFilePath = Application.persistentDataPath + $"/{exportFileName}_{timeStamp}.csv";
-        const string csvHeader = "Time (s),Object";
-        _gameObjectSpawnTimeExporter = new CsvExporter(gameObjectSpawnTimeFilePath, exportInterval, csvHeader);
+
+        var gameObjectSpawnTimeFilePath = Application.persistentDataPath + $"/{exportNotificationFileName}_{timeStamp}.csv";
+        const string csvHeaderNotification = "Time (s),Object";
+        _gameObjectSpawnTimeExporter = new CsvExporter(gameObjectSpawnTimeFilePath, exportInterval, csvHeaderNotification);
+
+        var debugDataFilePath = Application.persistentDataPath + $"/{exportDebugFileName} _{timeStamp}.csv";
+        const string csvHeaderDebug = "Distance from previous object (m),Distance to spawn object (m),User position,Current object position,Previous object position,Movement vector,Notification position, Notification rotation,Notifications remaining";
+        _debugExporter = new CsvExporter(debugDataFilePath, exportInterval, csvHeaderDebug);
+
+        // var speedometerPath = Application.persistentDataPath + $"/{exportSpeedometerFileName} _{timeStamp}.csv";
+        // const string csvHeaderSpeedometer = "Movement speed (m/frame),Movement speed (m/s),User position,Teleported";
+        // _speedometerExporter = new CsvExporter(speedometerPath, exportInterval, csvHeaderSpeedometer);
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
+        Debug.Log($"Exporting debug data to {debugDataFilePath}");
+        // Debug.Log($"Exporting speedometer data to {speedometerPath}");
     }
 
 
@@ -211,5 +428,75 @@ internal record GameObjectSpawnTimeDatum
     public override string ToString()
     {
         return $"{TimeStamp},{Object}";
+    }
+}
+
+
+internal record DebugStepDatum
+{
+    public float DistanceFromPreviousObject;
+    public float DistanceToSpawnObject;
+    public Vector3 UserPosition;
+    public Vector3 CurrentObjectPosition;
+    public Vector3 PreviousObjectPosition;
+
+
+    private string Vector3ToCSV(Vector3 vector)
+    {
+        return $"{vector.x} {vector.y} {vector.z}";
+    }
+
+    public override string ToString()
+    {
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(CurrentObjectPosition)},{Vector3ToCSV(PreviousObjectPosition)}";
+    }
+}
+
+
+internal record DebugNotificationDatum
+{
+    public float DistanceFromPreviousObject;
+    public float DistanceToSpawnObject;
+    public Vector3 UserPosition;
+    public Vector3 CurrentObjectPosition;
+    public Vector3 PreviousObjectPosition;
+    public Vector3 MovementVector;
+    public Vector3 NotificationPosition;
+    public Quaternion NotificationRotation;
+    public int NotificationsRemaining;
+
+
+    private string Vector3ToCSV(Vector3 vector)
+    {
+        return $"{vector.x} {vector.y} {vector.z}";
+    }
+
+    private string QuaternionToCSV(Quaternion quaternion)
+    {
+        return $"{quaternion.x} {quaternion.y} {quaternion.z} {quaternion.w}";
+    }
+
+    public override string ToString()
+    {
+        return $"{DistanceFromPreviousObject},{DistanceToSpawnObject},{Vector3ToCSV(UserPosition)},{Vector3ToCSV(CurrentObjectPosition)},{Vector3ToCSV(PreviousObjectPosition)},{Vector3ToCSV(MovementVector)},{Vector3ToCSV(NotificationPosition)},{QuaternionToCSV(NotificationRotation)},{NotificationsRemaining}";
+    }
+}
+
+
+internal record SpeedometerDatum
+{
+    public float MovementSpeed;
+    public float PreviousSpeed;
+    public Vector3 UserPosition;
+    public bool Teleported;
+
+    private string Vector3ToCSV(Vector3 vector)
+    {
+        return $"{vector.x} {vector.y} {vector.z}";
+    }
+
+    public override string ToString()
+    {
+        return $"{MovementSpeed},{MovementSpeed / Time.deltaTime},{PreviousSpeed},{PreviousSpeed / Time.deltaTime},{Vector3ToCSV(UserPosition)},{Teleported}";
     }
 }

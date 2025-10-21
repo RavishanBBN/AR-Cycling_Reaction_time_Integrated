@@ -5,50 +5,30 @@ using UnityEngine;
 public abstract class Notification : Object
 {
     //ATTRIBUTES
-    protected Vector3 position;
-    protected Vector3 eulerRotation;
-    protected Vector3 localScale;
     protected bool playAudio;
+    protected SpawnPosition spawnPosition;
 
 
 
     //METHODS
-    public Vector3 GetPosition()
-    {
-        return position;
-    }
-
-
-    public Vector3 GetEulerRotation()
-    {
-        return eulerRotation;
-    }
-
-
-    public Quaternion GetRotation()
-    {
-        return Quaternion.Euler(eulerRotation.x, eulerRotation.y, eulerRotation.z);
-    }
-
-
-    public Vector3 GetScale()
-    {
-        return localScale;
-    }
-
-
     public bool GetPlayAudio()
     {
         return playAudio;
     }
 
 
-    public bool CheckSpawn(Vector3 userPosition, float spawnDistance)
+    public Vector3 GetLocalScale(Vector3 localScale)
     {
-        Vector3 displacementVector = new Vector3(position.x - userPosition.x, 0, position.z - userPosition.z);
-        return displacementVector.magnitude <= spawnDistance;
+        Vector3 positionScale = spawnPosition.GetLocalScale();
+        return new Vector3(localScale.x * positionScale.x, localScale.y * positionScale.y, localScale.z * positionScale.z);
     }
 
 
-    public abstract GameObject SpawnObject();
+    public float GetPositionXDisplacement()
+    {
+        return spawnPosition.GetXDisplacement();
+    }
+
+
+    public abstract GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale);
 }

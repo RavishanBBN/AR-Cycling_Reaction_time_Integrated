@@ -6,19 +6,19 @@ public class Model : Notification
 {
     //ATTRIBUTES
     private GameObject model;
+    private Vector3 modelScale;
     private float spinningPeriod = 300;
     private RuntimeAnimatorController animatorController;
 
 
 
     //METHODS
-    public Model(Vector3 _position, Vector3 _eulerRotation, Vector3 _localScale, bool _playAudio, GameObject _model, float _spinningPeriod, RuntimeAnimatorController _animatorController)
+    public Model(bool _playAudio, SpawnPosition _spawnPosition, GameObject _model, Vector3 _modelScale, float _spinningPeriod, RuntimeAnimatorController _animatorController)
     {
-        position = _position;
-        eulerRotation = _eulerRotation;
-        localScale = _localScale;
         playAudio = _playAudio;
+        spawnPosition = _spawnPosition;
         model = _model;
+        modelScale = _modelScale;
         spinningPeriod = _spinningPeriod;
         animatorController = _animatorController;
     }
@@ -65,10 +65,11 @@ public class Model : Notification
     }
 
 
-    public override GameObject SpawnObject()
+    public override GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
-        GameObject modelObject = Instantiate(model, position, GetRotation());
-        modelObject.transform.localScale = localScale;
+        GameObject modelObject = Instantiate(model, position + spawnPosition.GetYDisplacementVector(), rotation * spawnPosition.GetRotation());
+        Vector3 totalScale = new Vector3(modelScale.x * localScale.x, modelScale.y * localScale.y, modelScale.z * localScale.z);
+        modelObject.transform.localScale = GetLocalScale(totalScale);
         AddStatefulInteractable(modelObject);
         AddCollider(modelObject);
         AddAnimation(modelObject);

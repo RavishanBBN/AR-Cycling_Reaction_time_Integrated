@@ -11,22 +11,20 @@ public class Sprite : Notification
 
 
     //METHODS
-    public Sprite(Vector3 _position, Vector3 _eulerRotation, Vector3 _localScale, bool _playAudio, Texture _texture, GameObject _signObject, Material _signMaterial)
+    public Sprite(bool _playAudio, SpawnPosition _spawnPosition, Texture _texture, GameObject _signObject, Material _signMaterial)
     {
-        position = _position;
-        eulerRotation = _eulerRotation;
-        localScale = _localScale;
         playAudio = _playAudio;
+        spawnPosition = _spawnPosition;
         texture = _texture;
         signObject = _signObject;
         signMaterial = _signMaterial;
     }
 
 
-    public override GameObject SpawnObject()
+    public override GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 localScale)
     {
-        GameObject spriteObject = Instantiate(signObject, position, GetRotation());
-        spriteObject.transform.localScale = localScale;
+        GameObject spriteObject = Instantiate(signObject, position + spawnPosition.GetYDisplacementVector(), rotation * spawnPosition.GetRotation());
+        spriteObject.transform.localScale = GetLocalScale(localScale);
         signMaterial.mainTexture = texture;
 
         MeshRenderer imageMeshRenderer = spriteObject.GetComponent<MeshRenderer>();
