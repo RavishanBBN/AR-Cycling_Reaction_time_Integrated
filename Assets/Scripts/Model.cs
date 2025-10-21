@@ -5,18 +5,19 @@ using MixedReality.Toolkit;
 public class Model : Notification
 {
     //ATTRIBUTES
-    public GameObject model;
-    public float spinningPeriod = 300;
-    public RuntimeAnimatorController animatorController;
+    private GameObject model;
+    private float spinningPeriod = 300;
+    private RuntimeAnimatorController animatorController;
 
 
 
     //METHODS
-    public Model(Vector3 _position, Vector3 _eulerRotation, Vector3 _localScale, GameObject _model, float _spinningPeriod, RuntimeAnimatorController _animatorController)
+    public Model(Vector3 _position, Vector3 _eulerRotation, Vector3 _localScale, bool _playAudio, GameObject _model, float _spinningPeriod, RuntimeAnimatorController _animatorController)
     {
         position = _position;
         eulerRotation = _eulerRotation;
         localScale = _localScale;
+        playAudio = _playAudio;
         model = _model;
         spinningPeriod = _spinningPeriod;
         animatorController = _animatorController;

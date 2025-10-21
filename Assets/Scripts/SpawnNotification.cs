@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
+
 public class SpawnNotification : MonoBehaviour
 {
     //ATTRIBUTES
@@ -14,8 +15,17 @@ public class SpawnNotification : MonoBehaviour
     public GameObject signObject;
     public Material signMaterial;
     public AudioSource audioSource;
+    public float timeBetweenAudio;
+    public float timeBetweenNotificationAndAudio;
+    public float audioProbability = 0.15f;
+    public bool showAllNotifications;
+    private float timeBetweenAudioTimer = 0;
+    private float timeBetweenNotificationAndAudioTimer = 0;
+    private float rngCheckTimer = 0f;
+    private float rngCheckDuration = 1f;
     private GameObject currentObject;
     private GameObject previousObject;
+    private List<GameObject> spawnedObjects;
     private CsvExporter _gameObjectSpawnTimeExporter;
     [SerializeField] private MenuControl menuControl;
     [SerializeField] private float endingMenuDistance = 0f;
@@ -30,33 +40,54 @@ public class SpawnNotification : MonoBehaviour
 
 
     //METHODS
-    public Sprite CreateSprite(Vector3 position, Vector3 eulerRotation, Vector3 localScale, string textureLocation)
+    public Sprite CreateSprite(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string textureLocation)
     {
         Texture texture = Resources.Load<Texture>(textureLocation);
-        return new Sprite(position, eulerRotation, localScale, texture, signObject, signMaterial);
+        return new Sprite(position, eulerRotation, localScale, playAudio, texture, signObject, signMaterial);
     }
 
 
-    public Model CreateModel(Vector3 position, Vector3 eulerRotation, Vector3 localScale, string modelLocation, float spinningPeriod, string animatorLocation = null)
+    public Model CreateModel(Vector3 position, Vector3 eulerRotation, Vector3 localScale, bool playAudio, string modelLocation, float spinningPeriod, string animatorLocation = null)
     {
         GameObject model = Resources.Load<GameObject>(modelLocation);
         RuntimeAnimatorController animator = Resources.Load<RuntimeAnimatorController>(animatorLocation);
-        return new Model(position, eulerRotation, localScale, model, spinningPeriod, animator);
+        return new Model(position, eulerRotation, localScale, playAudio, model, spinningPeriod, animator);
     }
 
 
     private void SpawnNotificationInstance(Notification notification)
     {
-        Destroy(previousObject);
-        previousObject = currentObject;
-        currentObject = notification.SpawnObject();
-        audioSource.Play();
-
-        _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
+        if (showAllNotifications)
         {
-            TimeStamp = Time.time,
-            Object = currentObject.name
-        }.ToString());
+            GameObject notificationInstance = notification.SpawnObject();
+            spawnedObjects.Add(notificationInstance);
+        }
+        else
+        {
+            Destroy(previousObject);
+            previousObject = currentObject;
+            currentObject = notification.SpawnObject();
+
+            if (notification.GetPlayAudio())
+            {
+                playAudio();
+            }
+
+            _gameObjectSpawnTimeExporter.AddData(new GameObjectSpawnTimeDatum
+            {
+                TimeStamp = Time.time,
+                Object = currentObject.name
+            }.ToString());
+
+            timeBetweenNotificationAndAudioTimer = 0;
+        }
+    }
+
+
+    private void playAudio()
+    {
+        timeBetweenAudioTimer = 0;
+        audioSource.Play();
     }
 
 
@@ -67,25 +98,47 @@ public class SpawnNotification : MonoBehaviour
         {
             new List<Notification>
             {
-                CreateSprite(new Vector3(-2, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), "SignImages/40_zone"),
-                CreateModel(new Vector3(0, 6, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), "Models/Cafe/Cafe", 5),
+                CreateModel(new Vector3(0, 1.5f, 5), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/MacDonalds/MacDonalds", 5),
+                CreateSprite(new Vector3(0, 1.5f, 30), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/40_zone"),
+                CreateModel(new Vector3(0, 1.5f, 70), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Cafe/Cafe", 5),
+                CreateSprite(new Vector3(0, 1.5f, 110), new Vector3(0, 0, 0), new Vector3(1, 1, 1), true, "SignImages/give_way"),
+                CreateModel(new Vector3(0, 1.5f, 160), new Vector3(0, 0, 0), new Vector3(50, 50, 50), false, "Models/Toilet/Toilet", 5),
             }
         };
 
         notifications = notificationLists[notificationListIndex];
         notifications.Reverse(); //Reverse notification list items so that items are popped from the end (O(1) time as opposed to O(n)).
+
+        if (showAllNotifications)
+        {
+            spawnedObjects = new List<GameObject>();
+            foreach (Notification notification in notifications)
+            {
+                SpawnNotificationInstance(notification);
+            }
+
+            notifications.Clear();
+        }
     }
+
 
     // Update is called once per frame
     void Update()
     {
+        //If the notification list is not empty.
         if (notifications.Count > 0)
         {
+            //Get the last notification.
             Notification notification = notifications[notifications.Count - 1];
+
+            //If the user is in range of the notification.
             if (notification.CheckSpawn(userCamera.transform.position, spawnDistance))
             {
+                //Spawn the notification.
                 SpawnNotificationInstance(notification);
-                lastNotificationPosition = notification.position;
+
+                //Pop the notification from the list (since the notification is at the end of the list, this is O(1) time).
+                lastNotificationPosition = notification.GetPosition();
                 notifications.RemoveAt(notifications.Count - 1);
             }
         }
@@ -105,6 +158,27 @@ public class SpawnNotification : MonoBehaviour
             }
         }
 
+        //Try playing random audio if applicable.
+        if (timeBetweenAudioTimer >= timeBetweenAudio && timeBetweenNotificationAndAudioTimer >= timeBetweenNotificationAndAudio)
+        {
+            rngCheckTimer += Time.deltaTime;
+
+            if (rngCheckTimer >= rngCheckDuration)
+            {
+                float rng = UnityEngine.Random.Range(0f, 1f);
+                if (rng < audioProbability)
+                {
+                    playAudio();
+                }
+                rngCheckTimer = 0f;
+            }
+        }
+        
+        //Increment audio timers.
+        timeBetweenAudioTimer += Time.deltaTime;
+        timeBetweenNotificationAndAudioTimer += Time.deltaTime;
+
+        //Export game object spawn time data to CSV.
         _gameObjectSpawnTimeExporter.ExportRecentData();
     }
 

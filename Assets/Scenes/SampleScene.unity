@@ -321,14 +321,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   notificationListIndex: 0
-  spawnDistance: 20
+  spawnDistance: 25
   notificationControl: {fileID: 1163151096}
   userCamera: {fileID: 777067287}
   signObject: {fileID: 7004894785395504756, guid: 60426f2fe3aaebc498936f41f8ecf827, type: 3}
   signMaterial: {fileID: 2100000, guid: 814114abfa8d90548b4eab37b547e9ef, type: 2}
   audioSource: {fileID: 1163151102}
+  timeBetweenAudio: 10
+  timeBetweenNotificationAndAudio: 5
+  audioProbability: 0.15
+  showAllNotifications: 0
   menuControl: {fileID: 1173149485}
-  endingMenuDistance: 50
+  endingMenuDistance: 30
   exportFileName: notification-spawn-time
   exportInterval: 1
 --- !u!82 &1163151102
@@ -474,8 +478,8 @@ MonoBehaviour:
   notificationControl: {fileID: 1163151096}
   gazeControl: {fileID: 654480810}
   dialogPool: {fileID: 1173149484}
-  startingMenuDialog: {fileID: 290411856905126350, guid: a4a53f88809976447b0ae78544494c5d, type: 3}
-  endingMenuDialog: {fileID: 290411856905126350, guid: a4a53f88809976447b0ae78544494c5d, type: 3}
+  startingMenuDialog: {fileID: 0}
+  endingMenuDialog: {fileID: 0}
 --- !u!4 &1173149486
 Transform:
   m_ObjectHideFlags: 0
