@@ -17,6 +17,9 @@ public class SpawnNotification : MonoBehaviour
     private GameObject currentObject;
     private GameObject previousObject;
     private CsvExporter _gameObjectSpawnTimeExporter;
+    [SerializeField] private MenuControl menuControl;
+    [SerializeField] private float endingMenuDistance = 0f;
+    private Vector3? lastNotificationPosition;
 
     [Header("Export Settings")]
     [SerializeField]
@@ -82,7 +85,23 @@ public class SpawnNotification : MonoBehaviour
             if (notification.CheckSpawn(userCamera.transform.position, spawnDistance))
             {
                 SpawnNotificationInstance(notification);
+                lastNotificationPosition = notification.position;
                 notifications.RemoveAt(notifications.Count - 1);
+            }
+        }
+        else
+        {
+            if (lastNotificationPosition.HasValue)
+            {
+                var distanceTraveled = Vector3.Distance(userCamera.transform.position, lastNotificationPosition.Value);
+
+                if (distanceTraveled >= endingMenuDistance)
+                {
+                    Debug.Log("Showing ending menu!");
+
+                    menuControl.ShowEndingMenuDialog();
+                    lastNotificationPosition = null;
+                }
             }
         }
 
@@ -99,7 +118,7 @@ public class SpawnNotification : MonoBehaviour
 
         Debug.Log($"Exporting notification spawned time to {gameObjectSpawnTimeFilePath}");
     }
-    
+
 
     private void OnDestroy()
     {

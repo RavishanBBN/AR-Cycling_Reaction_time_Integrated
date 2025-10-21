@@ -56,5 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "AR-Cycling.sln"
+    "dotnet.defaultSolution": "AR-Cycling.sln",
+    "dotnet.preferCSharpExtension": true
 }
