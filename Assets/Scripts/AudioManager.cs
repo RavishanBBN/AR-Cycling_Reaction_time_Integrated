@@ -11,6 +11,10 @@ public class AudioManager : MonoBehaviour
     private float timeBetweenNotificationAndAudioTimer = 0;
     private float rngCheckTimer = 0f;
     private float rngCheckDuration = 1f;
+    
+    // Audio timestamp tracking
+    private float lastAudioPlayTime = -1f;
+    public float LastAudioPlayTime => lastAudioPlayTime;
 
 
 
@@ -18,6 +22,7 @@ public class AudioManager : MonoBehaviour
     private void playAudio()
     {
         timeBetweenAudioTimer = 0;
+        lastAudioPlayTime = Time.time;
         audioSource.Play();
     }
 

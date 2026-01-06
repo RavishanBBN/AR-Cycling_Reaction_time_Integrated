@@ -8,17 +8,19 @@ public class MenuControl : MonoBehaviour
     [SerializeField] private GameObject notificationControl;
     [SerializeField] private GameObject audioControl;
     [SerializeField] private GameObject gazeControl;
+    [SerializeField] private GameObject reactionTimeTracker;
     public DialogPool dialogPool;
-    [SerializeField] private GameObject menuDialog;
+    [SerializeField] private GameObject startingMenuDialog;
+    [SerializeField] private GameObject endingMenuDialog;
 
     private void Start()
     {
-        ShowMenuDialog();
+        ShowStartingMenuDialog();
     }
 
-    private void ShowMenuDialog()
+    private void ShowStartingMenuDialog()
     {
-        var dialog = dialogPool.Get(prefab: menuDialog);
+        var dialog = dialogPool.Get(prefab: startingMenuDialog);
 
         dialog.SetHeader("Welcome!")
               .SetBody("This experiment explores Head-mounted displays (HMDs) " +
@@ -46,6 +48,29 @@ public class MenuControl : MonoBehaviour
               .Show();
     }
 
+    public void ShowEndingMenuDialog()
+    {
+        var dialog = dialogPool.Get(prefab: endingMenuDialog);
+
+        dialog.SetHeader("Thank you!")
+              .SetBody("You have completed the experiment. Thank you for your participation!")
+              .SetPositive("Restart", _ =>
+                                   {
+                                       dialog.Dismiss();
+
+                                       Debug.Log("Restart experiment!");
+                                       ShowStartingMenuDialog();
+                                   })
+                .SetNegative("Quit", _ =>
+                                     {
+                                         dialog.Dismiss();
+
+                                         Debug.Log("End experiment!");
+                                         QuitApplication();
+                                     })
+              .Show();
+    }
+
     private static void QuitApplication()
     {
         Application.Quit();
@@ -65,5 +90,6 @@ public class MenuControl : MonoBehaviour
     {
         SetGameObjectActive(notificationControl, true);
         SetGameObjectActive(audioControl, true);
+        SetGameObjectActive(reactionTimeTracker, true);
     }
 }
