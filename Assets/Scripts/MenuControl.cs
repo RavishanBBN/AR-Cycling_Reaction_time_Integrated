@@ -8,6 +8,7 @@ public class MenuControl : MonoBehaviour
     [SerializeField] private GameObject notificationControl;
     [SerializeField] private GameObject audioControl;
     [SerializeField] private GameObject gazeControl;
+    [SerializeField] private GameObject reactionTimeTracker;
     public DialogPool dialogPool;
     [SerializeField] private GameObject startingMenuDialog;
     [SerializeField] private GameObject endingMenuDialog;
@@ -89,5 +90,6 @@ public class MenuControl : MonoBehaviour
     {
         SetGameObjectActive(notificationControl, true);
         SetGameObjectActive(audioControl, true);
+        SetGameObjectActive(reactionTimeTracker, true);
     }
 }
